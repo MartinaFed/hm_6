@@ -1,0 +1,3102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Statistical Independence &amp; Contingency Analysis</title>
+  <style>
+    :root {
+      --bg-primary: #070b14;
+      --bg-secondary: #0d1424;
+      --bg-card: rgba(16, 24, 43, 0.78);
+      --bg-card-solid: #10182b;
+      --bg-elevated: rgba(25, 37, 64, 0.72);
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-accent: rgba(99, 102, 241, 0.42);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+      --shadow-glow: 0 18px 45px -12px rgba(6, 182, 212, 0.16), 0 8px 24px -8px rgba(99, 102, 241, 0.2);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      padding-bottom: 3.5rem;
+    }
+
+    /* Animated Ambient Mesh Background */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(99, 102, 241, 0.16) 0%, transparent 42%),
+        radial-gradient(circle at 86% 22%, rgba(6, 182, 212, 0.14) 0%, transparent 44%),
+        radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.13) 0%, transparent 48%),
+        linear-gradient(180deg, #060912 0%, #0a1020 55%, #070b14 100%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(75px);
+      opacity: 0.45;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 420px;
+      height: 420px;
+      background: rgba(99, 102, 241, 0.25);
+      top: -90px;
+      left: -80px;
+    }
+
+    .orb-2 {
+      width: 380px;
+      height: 380px;
+      background: rgba(6, 182, 212, 0.22);
+      top: 28%;
+      right: -100px;
+      animation-delay: -6s;
+    }
+
+    .orb-3 {
+      width: 340px;
+      height: 340px;
+      background: rgba(16, 185, 129, 0.16);
+      bottom: -80px;
+      left: 35%;
+      animation-delay: -11s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(32px, -24px) scale(1.06); }
+      100% { transform: translate(-24px, 28px) scale(0.96); }
+    }
+
+    /* Subtle Grid Overlay */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse at center, black 45%, transparent 90%);
+    }
+
+    /* Sticky Glass Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(7, 11, 20, 0.78);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      box-shadow: 0 0 22px rgba(99, 102, 241, 0.45);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 0.72rem;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.83rem;
+      font-weight: 500;
+      padding: 0.42rem 0.75rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 3px;
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 0.3rem 0.68rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.35);
+    }
+
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.44rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-export:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.14);
+      transform: translateY(-1px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2.25rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      border-radius: 24px;
+      padding: 2.4rem 2.2rem;
+      background: linear-gradient(135deg, rgba(16, 24, 43, 0.9) 0%, rgba(13, 20, 36, 0.82) 100%);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-glow);
+      overflow: hidden;
+      animation: fadeSlideUp 0.65s ease-out both;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-indigo), var(--accent-cyan), var(--accent-emerald), var(--accent-violet));
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.14);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.3); }
+    }
+
+    .hero h1 {
+      font-size: clamp(1.75rem, 3.2vw, 2.55rem);
+      font-weight: 800;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.85rem;
+      background: linear-gradient(135deg, #ffffff 15%, #cbd5e1 65%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+      max-width: 65ch;
+      margin-bottom: 1.35rem;
+    }
+
+    .hero-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.72rem;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+    }
+
+    /* Live KPI Summary Box in Hero */
+    .hero-kpi-panel {
+      background: rgba(9, 14, 26, 0.82);
+      border: 1px solid var(--border-accent);
+      border-radius: 18px;
+      padding: 1.3rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem;
+    }
+
+    .kpi-card {
+      background: rgba(18, 28, 50, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.85rem 0.95rem;
+      transition: transform 0.22s ease, border-color 0.22s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(6, 182, 212, 0.45);
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 1.32rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Section Styling */
+    .section-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+      animation: fadeSlideUp 0.6s ease-out both;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.35rem;
+      flex-wrap: wrap;
+    }
+
+    .section-step {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-cyan);
+      margin-bottom: 0.25rem;
+    }
+
+    .section-title {
+      font-size: 1.32rem;
+      font-weight: 750;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+    }
+
+    .section-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+
+    /* Theory Dual Grid */
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    .theory-box {
+      background: rgba(11, 17, 32, 0.78);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.35rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s ease, transform 0.25s ease;
+    }
+
+    .theory-box:hover {
+      border-color: rgba(99, 102, 241, 0.45);
+      transform: translateY(-2px);
+    }
+
+    .theory-box.prob::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent-indigo), var(--accent-violet));
+    }
+
+    .theory-box.stat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent-cyan), var(--accent-emerald));
+    }
+
+    .theory-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.45rem;
+      display: block;
+    }
+
+    .theory-box.prob .theory-tag { color: #a5b4fc; }
+    .theory-box.stat .theory-tag { color: #67e8f9; }
+
+    .theory-box h3 {
+      font-size: 1.06rem;
+      margin-bottom: 0.6rem;
+      color: #f8fafc;
+    }
+
+    .theory-box p {
+      font-size: 0.87rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.85rem;
+    }
+
+    .formula-block {
+      background: rgba(7, 11, 20, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 10px;
+      padding: 0.75rem 0.95rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      margin-bottom: 0.65rem;
+      overflow-x: auto;
+    }
+
+    .formula-block span.hl-cyan { color: #22d3ee; font-weight: 700; }
+    .formula-block span.hl-indigo { color: #818cf8; font-weight: 700; }
+    .formula-block span.hl-emerald { color: #34d399; font-weight: 700; }
+    .formula-block span.hl-amber { color: #fbbf24; font-weight: 700; }
+
+    /* Tabs */
+    .tabs {
+      display: inline-flex;
+      background: rgba(9, 14, 26, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 11px;
+      padding: 4px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.48rem 0.95rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(6, 182, 212, 0.85));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .tab-panel {
+      display: none;
+      margin-top: 1.1rem;
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.28s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dataset Cards */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 0.95rem;
+    }
+
+    .preset-card {
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 1rem 1.1rem;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text-primary);
+      transition: all 0.22s ease;
+      position: relative;
+    }
+
+    .preset-card:hover {
+      border-color: rgba(6, 182, 212, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .preset-card.selected {
+      border-color: var(--accent-cyan);
+      background: linear-gradient(145deg, rgba(6, 182, 212, 0.14), rgba(99, 102, 241, 0.14));
+      box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.35);
+    }
+
+    .preset-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      margin-bottom: 0.45rem;
+    }
+
+    .badge-dep { background: rgba(244, 63, 94, 0.16); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-ind { background: rgba(16, 185, 129, 0.16); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-mod { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .preset-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .preset-meta {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* Simulator & Raw Editor Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      background: rgba(11, 17, 32, 0.78);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 1.15rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .control-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control-group label span {
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-cyan);
+      cursor: pointer;
+    }
+
+    select, input[type="text"], textarea {
+      background: rgba(7, 11, 20, 0.9);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      font-family: var(--font-sans);
+      font-size: 0.84rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    textarea {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 0.55rem 1.05rem;
+      font-weight: 650;
+      font-size: 0.83rem;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 6px 18px rgba(6, 182, 212, 0.28);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(6, 182, 212, 0.42);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.85);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      padding: 0.52rem 0.95rem;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.16);
+    }
+
+    /* Raw Observations Preview Strip */
+    .raw-strip {
+      margin-top: 1rem;
+      background: rgba(9, 14, 26, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+    }
+
+    .raw-strip-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.55rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .raw-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      max-height: 92px;
+      overflow-y: auto;
+    }
+
+    .raw-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      padding: 0.2rem 0.52rem;
+      border-radius: 6px;
+      color: #cbd5e1;
+    }
+
+    .raw-editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+    }
+
+    .obs-table-wrap {
+      max-height: 230px;
+      overflow-y: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      background: rgba(7, 11, 20, 0.85);
+    }
+
+    .obs-mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+
+    .obs-mini-table th, .obs-mini-table td {
+      padding: 0.42rem 0.65rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      text-align: left;
+    }
+
+    .obs-mini-table th {
+      background: rgba(15, 23, 42, 0.95);
+      position: sticky;
+      top: 0;
+      color: var(--accent-cyan);
+    }
+
+    .del-row-btn {
+      background: rgba(244, 63, 94, 0.18);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-radius: 5px;
+      padding: 0.12rem 0.45rem;
+      cursor: pointer;
+      font-size: 0.72rem;
+    }
+
+    /* Contingency Table & Cell Inspector */
+    .contingency-layout {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 1.35rem;
+      align-items: start;
+    }
+
+    .mode-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .mode-btn {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.79rem;
+      font-weight: 600;
+      padding: 0.45rem 0.8rem;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+      border-color: rgba(99, 102, 241, 0.45);
+    }
+
+    .mode-btn.active {
+      background: rgba(99, 102, 241, 0.22);
+      border-color: var(--accent-indigo);
+      color: #e0e7ff;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.22);
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(9, 14, 26, 0.86);
+    }
+
+    table.ct-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    table.ct-table th, table.ct-table td {
+      padding: 0.78rem 0.85rem;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      text-align: center;
+      position: relative;
+    }
+
+    table.ct-table thead th {
+      background: rgba(16, 25, 46, 0.95);
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    table.ct-table th.axis-corner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.24), rgba(6, 182, 212, 0.2));
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    table.ct-table tbody th.row-header {
+      background: rgba(16, 25, 46, 0.82);
+      color: #e2e8f0;
+      font-weight: 650;
+      text-align: left;
+    }
+
+    td.ct-cell {
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      min-width: 105px;
+    }
+
+    td.ct-cell:hover {
+      box-shadow: inset 0 0 0 2px var(--accent-cyan);
+    }
+
+    td.ct-cell.selected-cell {
+      box-shadow: inset 0 0 0 2.5px #f59e0b;
+    }
+
+    .cell-main {
+      font-family: var(--font-mono);
+      font-weight: 750;
+      font-size: 0.96rem;
+      color: #fff;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cell-sub {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      margin-top: 0.15rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cell-bar-fill {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      top: 0;
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.24), rgba(99, 102, 241, 0.28));
+      z-index: 1;
+      transition: width 0.35s ease;
+      pointer-events: none;
+    }
+
+    td.marginal-cell {
+      background: rgba(30, 41, 59, 0.55);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #67e8f9;
+    }
+
+    td.grand-total {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.28), rgba(6, 182, 212, 0.28));
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .cochran-alert {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .cochran-ok {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    .cochran-warn {
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
+    /* Cell Inspector Panel */
+    .inspector-box {
+      background: rgba(10, 16, 30, 0.9);
+      border: 1px solid var(--border-accent);
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.65rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .inspector-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #f8fafc;
+    }
+
+    .inspector-coords {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      background: rgba(245, 158, 11, 0.18);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 0.18rem 0.55rem;
+      border-radius: 6px;
+    }
+
+    .calc-line {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 9px;
+      padding: 0.62rem 0.8rem;
+      margin-bottom: 0.55rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .calc-line-label {
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      display: block;
+      margin-bottom: 0.18rem;
+    }
+
+    /* Visual Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.35rem;
+    }
+
+    .chart-panel {
+      background: rgba(10, 16, 30, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+
+    .chart-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .chart-sub {
+      font-size: 0.79rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+    }
+
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+    }
+
+    .stacked-row {
+      margin-bottom: 0.78rem;
+    }
+
+    .stacked-row-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      margin-bottom: 0.28rem;
+      color: #e2e8f0;
+    }
+
+    .stacked-row-label.marginal-benchmark {
+      color: #67e8f9;
+      font-weight: 700;
+    }
+
+    .stacked-bar-track {
+      height: 24px;
+      border-radius: 7px;
+      overflow: hidden;
+      display: flex;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .stacked-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #060912;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    /* Inference & Chi-Square Section */
+    .inference-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.35rem;
+      align-items: start;
+    }
+
+    .verdict-banner {
+      border-radius: 14px;
+      padding: 1.15rem 1.3rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid;
+      transition: all 0.3s ease;
+    }
+
+    .verdict-dep {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.16), rgba(139, 92, 246, 0.14));
+      border-color: rgba(244, 63, 94, 0.45);
+    }
+
+    .verdict-ind {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.14));
+      border-color: rgba(16, 185, 129, 0.45);
+    }
+
+    .verdict-badge {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+      display: inline-block;
+    }
+
+    .verdict-dep .verdict-badge { color: #fda4af; }
+    .verdict-ind .verdict-badge { color: #6ee7b7; }
+
+    .verdict-title {
+      font-size: 1.08rem;
+      font-weight: 750;
+      margin-bottom: 0.35rem;
+      color: #fff;
+    }
+
+    .verdict-text {
+      font-size: 0.86rem;
+      color: #e2e8f0;
+    }
+
+    .alpha-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .alpha-btn {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .alpha-btn.active {
+      background: rgba(6, 182, 212, 0.22);
+      border-color: var(--accent-cyan);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .algebra-box {
+      background: rgba(7, 11, 20, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 0.95rem 1.05rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      max-height: 230px;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    .svg-chart-wrap {
+      background: rgba(8, 13, 25, 0.92);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .svg-chart-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .hover-readout {
+      margin-top: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    /* Causal DAG Explorer */
+    .causal-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.35rem;
+      align-items: start;
+    }
+
+    .scenario-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .scenario-btn {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.48rem 0.85rem;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .scenario-btn.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.28), rgba(6, 182, 212, 0.24));
+      border-color: var(--accent-violet);
+      color: #f3e8ff;
+    }
+
+    .dag-stage {
+      background: rgba(8, 13, 25, 0.92);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .dag-pulse-path {
+      stroke-dasharray: 8 6;
+      animation: dashFlow 1.4s linear infinite;
+    }
+
+    @keyframes dashFlow {
+      to { stroke-dashoffset: -28; }
+    }
+
+    .stratify-panel {
+      background: rgba(10, 16, 30, 0.88);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.15rem;
+    }
+
+    .strat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+    }
+
+    .mini-strat-card {
+      background: rgba(7, 11, 20, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .mini-strat-card h4 {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      margin-bottom: 0.45rem;
+      font-family: var(--font-mono);
+    }
+
+    .mini-strat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .mini-strat-table td, .mini-strat-table th {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 0.28rem 0.4rem;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .theory-grid,
+      .contingency-layout,
+      .charts-grid,
+      .inference-grid,
+      .causal-layout,
+      .raw-editor-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="grid-overlay"></div>
+
+  <!-- Top Sticky Navigation -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <a href="#top" class="brand">
+        <div class="brand-icon">&chi;&sup2;</div>
+        <div class="brand-text">
+          <span class="brand-title" data-i18n="navTitle">Indipendenza Statistica</span>
+          <span class="brand-sub" data-i18n="navSub">Analisi Bivariata &amp; Tavole di Contingenza</span>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#theory" data-i18n="navTheory">1. Teoria</a>
+        <a href="#dataset" data-i18n="navDataset">2. Dataset (X, Y)</a>
+        <a href="#contingency" data-i18n="navContingency">3. Contingenza</a>
+        <a href="#visuals" data-i18n="navVisuals">4. Profili Condizionati</a>
+        <a href="#inference" data-i18n="navInference">5. Test &chi;&sup2; &amp; p-value</a>
+        <a href="#causality" data-i18n="navCausality">6. Associazione vs Causalit&agrave;</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="btn-export" id="btnExportCSV" title="Export CSV">CSV &darr;</button>
+        <button class="btn-export" id="btnExportJSON" title="Export JSON">JSON &darr;</button>
+        <div class="lang-switch" role="group" aria-label="Language switcher">
+          <button class="lang-btn active" data-lang="it">IT</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top" class="container">
+    <!-- Hero Banner with Live KPIs -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="hero-badge">
+            <span class="pulse-dot"></span>
+            <span data-i18n="heroBadge">BIVARIATE CONTINGENCY &amp; &chi;&sup2; ENGINE</span>
+          </div>
+          <h1 data-i18n="heroTitle">Indipendenza Statistica, Tavole di Contingenza &amp; Analisi Causale</h1>
+          <p data-i18n="heroDesc">
+            Costruzione programmatica della tavola di contingenza a partire da coppie osservate (x<sub>k</sub>, y<sub>k</sub>), calcolo delle distribuzioni marginali e condizionate, frequenze attese sotto H<sub>0</sub>, statistica &chi;&sup2; di Pearson, p-value esatto e distinzione critica tra associazione statistica e nesso causale.
+          </p>
+          <div class="hero-pills">
+            <span class="pill">O<sub>ij</sub> &amp; f<sub>ij</sub> = O<sub>ij</sub> / N</span>
+            <span class="pill">P(Y|X) vs P(Y)</span>
+            <span class="pill">E<sub>ij</sub> = (n<sub>i&middot;</sub> &middot; n<sub>&middot;j</sub>) / N</span>
+            <span class="pill">&chi;&sup2; = &Sigma; (O<sub>ij</sub> &minus; E<sub>ij</sub>)&sup2; / E<sub>ij</sub></span>
+          </div>
+        </div>
+
+        <div class="hero-kpi-panel">
+          <div class="kpi-card">
+            <div class="kpi-label" data-i18n="kpiSample">Ampiezza Campione (N)</div>
+            <div class="kpi-value" id="kpiN">240</div>
+            <div class="kpi-sub" id="kpiDim">Griglia 3 &times; 3 (df = 4)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label" data-i18n="kpiChi2">Statistica &chi;&sup2; Osservata</div>
+            <div class="kpi-value" id="kpiChi2Val" style="color: #22d3ee;">0.000</div>
+            <div class="kpi-sub" id="kpiCritSub">Soglia &chi;&sup2;<sub>0.05</sub> = 9.488</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">p-value (1 &minus; F<sub>&chi;&sup2;</sub>)</div>
+            <div class="kpi-value" id="kpiPVal" style="color: #a5b4fc;">0.0000</div>
+            <div class="kpi-sub" id="kpiAlphaSub">&alpha; = 0.05</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label" data-i18n="kpiCramer">V di Cram&eacute;r &amp; Esito</div>
+            <div class="kpi-value" id="kpiCramerVal" style="color: #34d399;">0.000</div>
+            <div class="kpi-sub" id="kpiVerdictShort">Dipendenza</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Theoretical Foundations -->
+    <section id="theory" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec1Step">Modulo 01 &mdash; Fondamenti Teorici</span>
+          <h2 class="section-title" data-i18n="sec1Title">Indipendenza in Probabilit&agrave; vs Indipendenza in Statistica</h2>
+          <p class="section-desc" data-i18n="sec1Desc">
+            Confronto formale tra il modello assiomatico teorico (spazio di probabilit&agrave;) e la verifica empirica su dati campionari finiti.
+          </p>
+        </div>
+      </div>
+
+      <div class="theory-grid">
+        <div class="theory-box prob">
+          <span class="theory-tag" data-i18n="probTag">Teoria della Probabilit&agrave; (Modello Assiomatico)</span>
+          <h3 data-i18n="probHeading">Fattorizzazione della Probabilit&agrave; Congiunta</h3>
+          <p data-i18n="probBody">
+            In uno spazio di probabilit&agrave; (&Omega;, &Fscr;, P), due eventi A e B sono stocasticamente indipendenti se il verificarsi di uno non altera la probabilit&agrave; dell'altro. Per due variabili aleatorie discrete X e Y, la distribuzione congiunta coincide ovunque con il prodotto delle rispettive marginali:
+          </p>
+          <div class="formula-block">
+            <span class="hl-indigo">P(A &cap; B) = P(A) &middot; P(B)</span> &nbsp;&hArr;&nbsp; P(B | A) = P(B) &nbsp;(con P(A) &gt; 0)
+          </div>
+          <div class="formula-block">
+            <span class="hl-cyan">p<sub>X,Y</sub>(x<sub>i</sub>, y<sub>j</sub>) = p<sub>X</sub>(x<sub>i</sub>) &middot; p<sub>Y</sub>(y<sub>j</sub>)</span> &nbsp;&forall; (x<sub>i</sub>, y<sub>j</sub>)
+          </div>
+        </div>
+
+        <div class="theory-box stat">
+          <span class="theory-tag" data-i18n="statTag">Statistica Inferenziale (Dati Empirici)</span>
+          <h3 data-i18n="statHeading">Frequenze Attese E<sub>ij</sub> e Test &chi;&sup2; di Pearson</h3>
+          <p data-i18n="statBody">
+            Su un campione di N osservazioni bivariate, le frequenze relative f<sub>ij</sub> subiscono fluttuazioni campionarie anche quando X e Y sono indipendenti. Si confrontano quindi le frequenze osservate O<sub>ij</sub> con le frequenze teoriche attese E<sub>ij</sub> sotto l'ipotesi nulla H<sub>0</sub> di indipendenza:
+          </p>
+          <div class="formula-block">
+            <span class="hl-emerald">E<sub>ij</sub> = N &middot; f<sub>i&middot;</sub> &middot; f<sub>&middot;j</sub> = (n<sub>i&middot;</sub> &middot; n<sub>&middot;j</sub>) / N</span>
+          </div>
+          <div class="formula-block">
+            <span class="hl-amber">&chi;&sup2; = &Sigma;<sub>i=1..r</sub> &Sigma;<sub>j=1..c</sub> (O<sub>ij</sub> &minus; E<sub>ij</sub>)&sup2; / E<sub>ij</sub></span> &nbsp;&sim;&nbsp; &chi;&sup2;<sub>(r&minus;1)(c&minus;1)</sub> &nbsp;(Regola di Cochran: E<sub>ij</sub> &ge; 5)
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Programmatic Bivariate Dataset Engine -->
+    <section id="dataset" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec2Step">Modulo 02 &mdash; Motore Dati Bivariati (X, Y)</span>
+          <h2 class="section-title" data-i18n="sec2Title">Generazione, Selezione o Inserimento del Dataset Grezzo</h2>
+          <p class="section-desc" data-i18n="sec2Desc">
+            La tavola di contingenza non &egrave; inserita manualmente: viene aggregata programmaticamente contando ogni coppia elementare (x<sub>k</sub>, y<sub>k</sub>) per k = 1, ..., N.
+          </p>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" data-tab="presets" data-i18n="tabPresets">Dataset Curati (4)</button>
+          <button class="tab-btn" data-tab="simulator" data-i18n="tabSim">Simulatore Monte Carlo</button>
+          <button class="tab-btn" data-tab="editor" data-i18n="tabEditor">Editor Osservazioni / CSV</button>
+        </div>
+      </div>
+
+      <!-- Tab 1: Curated Datasets -->
+      <div id="tab-presets" class="tab-panel active">
+        <div class="preset-grid" id="presetGrid"></div>
+      </div>
+
+      <!-- Tab 2: Monte Carlo Simulator -->
+      <div id="tab-simulator" class="tab-panel">
+        <div class="controls-grid">
+          <div class="control-group">
+            <label><span data-i18n="simNLabel">Ampiezza Campione N:</span> <span id="simNVal">300</span></label>
+            <input type="range" id="simN" min="40" max="1500" step="10" value="300" />
+          </div>
+          <div class="control-group">
+            <label><span data-i18n="simLambdaLabel">Forza Associazione &lambda;:</span> <span id="simLambdaVal">0.00 (Indipendenza)</span></label>
+            <input type="range" id="simLambda" min="0" max="1" step="0.05" value="0" />
+          </div>
+          <div class="control-group">
+            <label data-i18n="simDimLabel">Dimensione Griglia (r &times; c):</label>
+            <select id="simDim">
+              <option value="2x2">2 &times; 2 (df = 1)</option>
+              <option value="3x3" selected>3 &times; 3 (df = 4)</option>
+              <option value="3x4">3 &times; 4 (df = 6)</option>
+            </select>
+          </div>
+          <div class="control-group" style="justify-content: flex-end;">
+            <button class="btn-primary" id="btnRunSim" data-i18n="btnSimRun">Genera Campione Bivariato</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Raw Observation Editor & CSV -->
+      <div id="tab-editor" class="tab-panel">
+        <div class="raw-editor-layout">
+          <div>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.7rem; flex-wrap: wrap;">
+              <input type="text" id="inputNewX" placeholder="Valore X (es. Alto)" style="flex: 1; min-width: 120px;" />
+              <input type="text" id="inputNewY" placeholder="Valore Y (es. Successo)" style="flex: 1; min-width: 120px;" />
+              <button class="btn-primary" id="btnAddRow" data-i18n="btnAddPair">+ Aggiungi Coppia</button>
+            </div>
+            <label style="font-size: 0.78rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;" data-i18n="csvBulkLabel">
+              Oppure incolla coppie CSV (una riga per osservazione: X, Y):
+            </label>
+            <textarea id="csvInputArea" placeholder="Ore_Studio, Esito&#10;Alto, Promosso&#10;Basso, Bocciato"></textarea>
+            <div style="display: flex; gap: 0.55rem; margin-top: 0.55rem;">
+              <button class="btn-secondary" id="btnLoadCSV" data-i18n="btnApplyCSV">Applica CSV al Dataset</button>
+              <button class="btn-secondary" id="btnSyncCSV" data-i18n="btnLoadCurrentCSV">Carica Dataset Attuale nel Box</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-family: var(--font-mono);" id="rawTableCount">
+              Record osservati: 0
+            </div>
+            <div class="obs-table-wrap">
+              <table class="obs-mini-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th id="thRawX">X</th>
+                    <th id="thRawY">Y</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="rawObsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Raw Pairs Sample Strip -->
+      <div class="raw-strip">
+        <div class="raw-strip-header">
+          <span id="rawStripTitle">Anteprima Array Bivariato [(x₁, y₁), ..., (xₙ, yₙ)]</span>
+          <span id="rawVarsSummary">X &perp; Y ?</span>
+        </div>
+        <div class="raw-chips" id="rawChipsContainer"></div>
+      </div>
+    </section>
+
+    <!-- Section 3: Contingency Table & Cell Inspector -->
+    <section id="contingency" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec3Step">Modulo 03 &mdash; Tavola di Contingenza Multi-Vista</span>
+          <h2 class="section-title" data-i18n="sec3Title">Frequenze Congiunte, Marginali, Condizionate &amp; Attese</h2>
+          <p class="section-desc" data-i18n="sec3Desc">
+            Seleziona una modalit&agrave; di visualizzazione e clicca su qualsiasi cella (i, j) per ispezionarne i passaggi algebrici esatti.
+          </p>
+        </div>
+      </div>
+
+      <div class="mode-bar" id="tableModeBar">
+        <button class="mode-btn active" data-mode="observed" data-i18n="modeObs">1. Osservate O<sub>ij</sub> &amp; Congiunte f<sub>ij</sub></button>
+        <button class="mode-btn" data-mode="rowCond" data-i18n="modeRow">2. Condizionate Riga P(Y | X)</button>
+        <button class="mode-btn" data-mode="colCond" data-i18n="modeCol">3. Condizionate Colonna P(X | Y)</button>
+        <button class="mode-btn" data-mode="expected" data-i18n="modeExp">4. Attese Indipendenza E<sub>ij</sub></button>
+        <button class="mode-btn" data-mode="chi2" data-i18n="modeChi2">5. Contributi &chi;&sup2;<sub>ij</sub> (Heatmap)</button>
+      </div>
+
+      <div class="contingency-layout">
+        <div>
+          <div class="table-responsive" id="contingencyTableWrapper"></div>
+          <div id="cochranStatus" class="cochran-alert cochran-ok"></div>
+        </div>
+
+        <aside class="inspector-box" id="cellInspector">
+          <div class="inspector-header">
+            <span class="inspector-title" data-i18n="inspTitle">Ispettore Algebrico Cella</span>
+            <span class="inspector-coords" id="inspCoords">Cella (1, 1)</span>
+          </div>
+          <div id="inspectorBody"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Section 4: Visual Comparison of Conditional Profiles -->
+    <section id="visuals" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec4Step">Modulo 04 &mdash; Diagnostica Visiva</span>
+          <h2 class="section-title" data-i18n="sec4Title">Confronto Profili Condizionati P(Y | X = x<sub>i</sub>) vs Marginale P(Y)</h2>
+          <p class="section-desc" data-i18n="sec4Desc">
+            Se X e Y sono indipendenti, le barre condizionate di ogni riga X = x<sub>i</sub> hanno la medesima composizione percentuale della barra marginale P(Y).
+          </p>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-panel">
+          <div class="chart-title" data-i18n="chart1Title">Profili Condizionati per Riga (100% Stacked)</div>
+          <div class="chart-sub" data-i18n="chart1Sub">Confronto diretto tra P(Y | X = xᵢ) e la distribuzione marginale P(Y)</div>
+          <div class="legend-row" id="stackedLegend"></div>
+          <div id="stackedBarsContainer"></div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-title" data-i18n="chart2Title">Scarti Standardizzati di Pearson (O<sub>ij</sub> &minus; E<sub>ij</sub>) / &radic;E<sub>ij</sub></div>
+          <div class="chart-sub" data-i18n="chart2Sub">Valori oltre &plusmn;1.96 segnalano celle che guidano la dipendenza statistica</div>
+          <div id="residualsChartContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Chi-Square Inference & Density Curve -->
+    <section id="inference" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec5Step">Modulo 05 &mdash; Inferenza &amp; Decisione Statistica</span>
+          <h2 class="section-title" data-i18n="sec5Title">Calcolo Step-by-Step di &chi;&sup2;, p-value e Distribuzione &chi;&sup2;<sub>df</sub></h2>
+          <p class="section-desc" data-i18n="sec5Desc">
+            Verifica formale dell'ipotesi nulla H<sub>0</sub>: X &perp; Y (indipendenza) contro H<sub>1</sub>: X &nrarr; Y (dipendenza statistica).
+          </p>
+        </div>
+      </div>
+
+      <div class="inference-grid">
+        <div>
+          <div class="alpha-bar">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;" data-i18n="alphaLabel">Livello di significativit&agrave; &alpha;:</span>
+            <button class="alpha-btn" data-alpha="0.10">0.10</button>
+            <button class="alpha-btn active" data-alpha="0.05">0.05</button>
+            <button class="alpha-btn" data-alpha="0.01">0.01</button>
+            <button class="alpha-btn" data-alpha="0.001">0.001</button>
+          </div>
+
+          <div id="verdictBanner" class="verdict-banner verdict-dep">
+            <span class="verdict-badge" id="verdictBadge">ESITO DEL TEST</span>
+            <div class="verdict-title" id="verdictTitle">Dipendenza Statistica Significativa</div>
+            <div class="verdict-text" id="verdictText"></div>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.45rem; font-weight: 600;" data-i18n="algebraHeader">
+            Sviluppo Algebrico Esplicito della Somma &chi;&sup2;:
+          </div>
+          <div class="algebra-box" id="chi2AlgebraBox"></div>
+        </div>
+
+        <div class="svg-chart-wrap">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.55rem;">
+            <span style="font-weight: 700; font-size: 0.92rem;" id="pdfChartTitle">Densit&agrave; Teorica &chi;&sup2; (df = 4)</span>
+            <span style="font-family: var(--font-mono); font-size: 0.74rem; color: #fda4af;" id="pdfRegionTag">Regione di rifiuto &alpha; = 0.05</span>
+          </div>
+          <svg id="chi2PdfSvg" viewBox="0 0 600 310" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="hover-readout">
+            <span id="pdfHoverX">Muovi il cursore sul grafico per ispezionare f(x)</span>
+            <span id="pdfHoverTail">P(&chi;&sup2; &ge; x) = &mdash;</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Association vs Causality (DAG Explorer) -->
+    <section id="causality" class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-step" data-i18n="sec6Step">Modulo 06 &mdash; Epistemologia dei Dati</span>
+          <h2 class="section-title" data-i18n="sec6Title">Associazione Statistica &ne; Causalit&agrave; (Esploratore DAG &amp; Confondimento)</h2>
+          <p class="section-desc" data-i18n="sec6Desc">
+            Un &chi;&sup2; elevato dimostra che P(Y | X) &ne; P(Y), ma non identifica il meccanismo generatore: X pu&ograve; causare Y, Y pu&ograve; causare X, oppure una terza variabile Z pu&ograve; confondere entrambi.
+          </p>
+        </div>
+      </div>
+
+      <div class="scenario-pills" id="causalScenarioBar">
+        <button class="scenario-btn active" data-scenario="confounder" data-i18n="scenConfounder">1. Variabile Confondente (X &larr; Z &rarr; Y)</button>
+        <button class="scenario-btn" data-scenario="direct" data-i18n="scenDirect">2. Causalit&agrave; Diretta (X &rarr; Y)</button>
+        <button class="scenario-btn" data-scenario="reverse" data-i18n="scenReverse">3. Causalit&agrave; Inversa (Y &rarr; X)</button>
+      </div>
+
+      <div class="causal-layout">
+        <div class="dag-stage">
+          <svg id="causalDagSvg" viewBox="0 0 560 270" style="width: 100%; height: auto; display: block;"></svg>
+          <p id="dagCaption" style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.65rem;"></p>
+        </div>
+
+        <div class="stratify-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <strong style="font-size: 0.94rem;" data-i18n="stratTitle">Controllo per Confondente Z (Stratificazione)</strong>
+            <button class="btn-primary" id="btnToggleStratify" data-i18n="btnStratify">Stratifica per Z</button>
+          </div>
+          <p id="stratExplanation" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.5rem;"></p>
+          <div id="stratContentArea"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* =========================================================================
+       1. BILINGUAL DICTIONARY (IT / EN)
+       ========================================================================= */
+    const I18N = {
+      it: {
+        navTitle: "Indipendenza Statistica",
+        navSub: "Analisi Bivariata & Tavole di Contingenza",
+        navTheory: "1. Teoria",
+        navDataset: "2. Dataset (X, Y)",
+        navContingency: "3. Contingenza",
+        navVisuals: "4. Profili Condizionati",
+        navInference: "5. Test \u03c7\u00b2 & p-value",
+        navCausality: "6. Associazione vs Causalit\u00e0",
+        heroBadge: "MOTORE BIVARIATO DI CONTINGENZA & TEST \u03c7\u00b2",
+        heroTitle: "Indipendenza Statistica, Tavole di Contingenza & Analisi Causale",
+        heroDesc: "Costruzione programmatica della tavola di contingenza a partire da coppie osservate (x\u2096, y\u2096), calcolo delle distribuzioni marginali e condizionate, frequenze attese sotto H\u2080, statistica \u03c7\u00b2 di Pearson, p-value esatto e distinzione critica tra associazione statistica e nesso causale.",
+        kpiSample: "Ampiezza Campione (N)",
+        kpiChi2: "Statistica \u03c7\u00b2 Osservata",
+        kpiCramer: "V di Cram\u00e9r & Esito",
+        sec1Step: "Modulo 01 \u2014 Fondamenti Teorici",
+        sec1Title: "Indipendenza in Probabilit\u00e0 vs Indipendenza in Statistica",
+        sec1Desc: "Confronto formale tra il modello assiomatico teorico (spazio di probabilit\u00e0) e la verifica empirica su dati campionari finiti.",
+        probTag: "Teoria della Probabilit\u00e0 (Modello Assiomatico)",
+        probHeading: "Fattorizzazione della Probabilit\u00e0 Congiunta",
+        probBody: "In uno spazio di probabilit\u00e0 (\u03a9, \u2131, P), due eventi A e B sono stocasticamente indipendenti se il verificarsi di uno non altera la probabilit\u00e0 dell'altro. Per due variabili aleatorie discrete X e Y, la distribuzione congiunta coincide ovunque con il prodotto delle rispettive marginali:",
+        statTag: "Statistica Inferenziale (Dati Empirici)",
+        statHeading: "Frequenze Attese E\u1d62\u2c7c e Test \u03c7\u00b2 di Pearson",
+        statBody: "Su un campione di N osservazioni bivariate, le frequenze relative f\u1d62\u2c7c subiscono fluttuazioni campionarie anche quando X e Y sono indipendenti. Si confrontano quindi le frequenze osservate O\u1d62\u2c7c con le frequenze teoriche attese E\u1d62\u2c7c sotto l'ipotesi nulla H\u2080 di indipendenza:",
+        sec2Step: "Modulo 02 \u2014 Motore Dati Bivariati (X, Y)",
+        sec2Title: "Generazione, Selezione o Inserimento del Dataset Grezzo",
+        sec2Desc: "La tavola di contingenza non \u00e8 inserita manualmente: viene aggregata programmaticamente contando ogni coppia elementare (x\u2096, y\u2096) per k = 1, ..., N.",
+        tabPresets: "Dataset Curati (4)",
+        tabSim: "Simulatore Monte Carlo",
+        tabEditor: "Editor Osservazioni / CSV",
+        simNLabel: "Ampiezza Campione N:",
+        simLambdaLabel: "Forza Associazione \u03bb:",
+        simDimLabel: "Dimensione Griglia (r \u00d7 c):",
+        btnSimRun: "Genera Campione Bivariato",
+        btnAddPair: "+ Aggiungi Coppia",
+        csvBulkLabel: "Oppure incolla coppie CSV (una riga per osservazione: X, Y):",
+        btnApplyCSV: "Applica CSV al Dataset",
+        btnLoadCurrentCSV: "Carica Dataset Attuale nel Box",
+        sec3Step: "Modulo 03 \u2014 Tavola di Contingenza Multi-Vista",
+        sec3Title: "Frequenze Congiunte, Marginali, Condizionate & Attese",
+        sec3Desc: "Seleziona una modalit\u00e0 di visualizzazione e clicca su qualsiasi cella (i, j) per ispezionarne i passaggi algebrici esatti.",
+        modeObs: "1. Osservate O\u1d62\u2c7c & Congiunte f\u1d62\u2c7c",
+        modeRow: "2. Condizionate Riga P(Y | X)",
+        modeCol: "3. Condizionate Colonna P(X | Y)",
+        modeExp: "4. Attese Indipendenza E\u1d62\u2c7c",
+        modeChi2: "5. Contributi \u03c7\u00b2\u1d62\u2c7c (Heatmap)",
+        inspTitle: "Ispettore Algebrico Cella",
+        sec4Step: "Modulo 04 \u2014 Diagnostica Visiva",
+        sec4Title: "Confronto Profili Condizionati P(Y | X = x\u1d62) vs Marginale P(Y)",
+        sec4Desc: "Se X e Y sono indipendenti, le barre condizionate di ogni riga X = x\u1d62 hanno la medesima composizione percentuale della barra marginale P(Y).",
+        chart1Title: "Profili Condizionati per Riga (100% Stacked)",
+        chart1Sub: "Confronto diretto tra P(Y | X = x\u1d62) e la distribuzione marginale P(Y)",
+        chart2Title: "Scarti Standardizzati di Pearson (O\u1d62\u2c7c \u2212 E\u1d62\u2c7c) / \u221aE\u1d62\u2c7c",
+        chart2Sub: "Valori oltre \u00b11.96 segnalano celle che guidano la dipendenza statistica",
+        sec5Step: "Modulo 05 \u2014 Inferenza & Decisione Statistica",
+        sec5Title: "Calcolo Step-by-Step di \u03c7\u00b2, p-value e Distribuzione \u03c7\u00b2_df",
+        sec5Desc: "Verifica formale dell'ipotesi nulla H\u2080: X \u22a5 Y (indipendenza) contro H\u2081: X \u219b Y (dipendenza statistica).",
+        alphaLabel: "Livello di significativit\u00e0 \u03b1:",
+        algebraHeader: "Sviluppo Algebrico Esplicito della Somma \u03c7\u00b2:",
+        sec6Step: "Modulo 06 \u2014 Epistemologia dei Dati",
+        sec6Title: "Associazione Statistica \u2260 Causalit\u00e0 (Esploratore DAG & Confondimento)",
+        sec6Desc: "Un \u03c7\u00b2 elevato dimostra che P(Y | X) \u2260 P(Y), ma non identifica il meccanismo generatore: X pu\u00f2 causare Y, Y pu\u00f2 causare X, oppure una terza variabile Z pu\u00f2 confondere entrambi.",
+        scenConfounder: "1. Variabile Confondente (X \u2190 Z \u2192 Y)",
+        scenDirect: "2. Causalit\u00e0 Diretta (X \u2192 Y)",
+        scenReverse: "3. Causalit\u00e0 Inversa (Y \u2192 X)",
+        stratTitle: "Controllo per Confondente Z (Stratificazione)",
+        btnStratify: "Stratifica per Z",
+        btnUnstratify: "Mostra Aggregato (Marginale)",
+        marginalLabel: "Marginale P(Y)",
+        totalRow: "Totale Marginale n\u2080\u2c7c",
+        totalCol: "Totale Marginale n\u1d62\u2080",
+        cochranGood: "Regola di Cochran soddisfatta: tutte le frequenze attese E\u1d62\u2c7c sono \u2265 5. L'approssimazione asintotica \u03c7\u00b2 \u00e8 affidabile.",
+        cochranBad: "Attenzione (Regola di Cochran): almeno una cella ha frequenza attesa E\u1d62\u2c7c < 5. L'approssimazione \u03c7\u00b2 potrebbe essere imprecisa.",
+        depTitle: "Dipendenza Statistica Significativa (Rifiuto H\u2080)",
+        indTitle: "Compatibile con Indipendenza Statistica (Non rifiuto H\u2080)",
+        depShort: "Dipendenti (H\u2081)",
+        indShort: "Indipendenti (H\u2080)"
+      },
+      en: {
+        navTitle: "Statistical Independence",
+        navSub: "Bivariate Analysis & Contingency Tables",
+        navTheory: "1. Theory",
+        navDataset: "2. Dataset (X, Y)",
+        navContingency: "3. Contingency",
+        navVisuals: "4. Conditional Profiles",
+        navInference: "5. \u03c7\u00b2 Test & p-value",
+        navCausality: "6. Association vs Causality",
+        heroBadge: "BIVARIATE CONTINGENCY & \u03c7\u00b2 INFERENCE ENGINE",
+        heroTitle: "Statistical Independence, Contingency Tables & Causal Reasoning",
+        heroDesc: "Programmatic construction of contingency tables from raw observed pairs (x\u2096, y\u2096), computation of marginal and conditional distributions, expected frequencies under H\u2080, Pearson's \u03c7\u00b2 statistic, exact p-value, and critical distinction between statistical association and causality.",
+        kpiSample: "Sample Size (N)",
+        kpiChi2: "Observed \u03c7\u00b2 Statistic",
+        kpiCramer: "Cram\u00e9r's V & Outcome",
+        sec1Step: "Module 01 \u2014 Theoretical Foundations",
+        sec1Title: "Independence in Probability vs Independence in Statistics",
+        sec1Desc: "Formal comparison between the axiomatic theoretical model (probability space) and empirical verification on finite sample data.",
+        probTag: "Probability Theory (Axiomatic Model)",
+        probHeading: "Joint Probability Factorization",
+        probBody: "In a probability space (\u03a9, \u2131, P), two events A and B are stochastically independent if the occurrence of one does not alter the probability of the other. For two discrete random variables X and Y, the joint distribution equals the product of their marginals everywhere:",
+        statTag: "Inferential Statistics (Empirical Data)",
+        statHeading: "Expected Frequencies E\u1d62\u2c7c and Pearson's \u03c7\u00b2 Test",
+        statBody: "In a finite sample of N bivariate observations, relative frequencies f\u1d62\u2c7c exhibit sampling fluctuations even when X and Y are independent. Observed frequencies O\u1d62\u2c7c are compared against theoretical expected frequencies E\u1d62\u2c7c under the null hypothesis H\u2080 of independence:",
+        sec2Step: "Module 02 \u2014 Bivariate Data Engine (X, Y)",
+        sec2Title: "Generate, Select, or Edit Raw Bivariate Dataset",
+        sec2Desc: "The contingency table is never hardcoded: it is programmatically aggregated by counting every elementary pair (x\u2096, y\u2096) for k = 1, ..., N.",
+        tabPresets: "Curated Datasets (4)",
+        tabSim: "Monte Carlo Simulator",
+        tabEditor: "Raw Observations / CSV",
+        simNLabel: "Sample Size N:",
+        simLambdaLabel: "Association Strength \u03bb:",
+        simDimLabel: "Grid Dimensions (r \u00d7 c):",
+        btnSimRun: "Generate Bivariate Sample",
+        btnAddPair: "+ Add Pair",
+        csvBulkLabel: "Or paste CSV pairs (one row per observation: X, Y):",
+        btnApplyCSV: "Apply CSV to Dataset",
+        btnLoadCurrentCSV: "Load Current Dataset into Box",
+        sec3Step: "Module 03 \u2014 Multi-View Contingency Table",
+        sec3Title: "Joint, Marginal, Conditional & Expected Frequencies",
+        sec3Desc: "Choose a display mode and click any cell (i, j) to inspect its exact algebraic derivation.",
+        modeObs: "1. Observed O\u1d62\u2c7c & Joint f\u1d62\u2c7c",
+        modeRow: "2. Row Conditional P(Y | X)",
+        modeCol: "3. Col Conditional P(X | Y)",
+        modeExp: "4. Expected Independence E\u1d62\u2c7c",
+        modeChi2: "5. \u03c7\u00b2\u1d62\u2c7c Contributions (Heatmap)",
+        inspTitle: "Cell Algebraic Inspector",
+        sec4Step: "Module 04 \u2014 Visual Diagnostics",
+        sec4Title: "Conditional Profiles P(Y | X = x\u1d62) vs Marginal P(Y)",
+        sec4Desc: "If X and Y are independent, every row's conditional bar P(Y | X = x\u1d62) matches the percentage breakdown of the marginal bar P(Y).",
+        chart1Title: "Row Conditional Profiles (100% Stacked)",
+        chart1Sub: "Direct visual comparison between P(Y | X = x\u1d62) and the marginal distribution P(Y)",
+        chart2Title: "Pearson Standardized Residuals (O\u1d62\u2c7c \u2212 E\u1d62\u2c7c) / \u221aE\u1d62\u2c7c",
+        chart2Sub: "Values beyond \u00b11.96 highlight cells driving statistical dependence",
+        sec5Step: "Module 05 \u2014 Statistical Inference & Decision",
+        sec5Title: "Step-by-Step \u03c7\u00b2, p-value, and \u03c7\u00b2_df Density Distribution",
+        sec5Desc: "Formal hypothesis test of H\u2080: X \u22a5 Y (independence) against H\u2081: X \u219b Y (statistical dependence).",
+        alphaLabel: "Significance level \u03b1:",
+        algebraHeader: "Explicit Algebraic Expansion of the \u03c7\u00b2 Sum:",
+        sec6Step: "Module 06 \u2014 Data Epistemology",
+        sec6Title: "Statistical Association \u2260 Causality (DAG & Confounding Explorer)",
+        sec6Desc: "A large \u03c7\u00b2 shows that P(Y | X) \u2260 P(Y), but cannot identify the causal mechanism: X may cause Y, Y may cause X, or a third variable Z may confound both.",
+        scenConfounder: "1. Confounding Variable (X \u2190 Z \u2192 Y)",
+        scenDirect: "2. Direct Causation (X \u2192 Y)",
+        scenReverse: "3. Reverse Causality (Y \u2192 X)",
+        stratTitle: "Control for Confounder Z (Stratification)",
+        btnStratify: "Stratify by Z",
+        btnUnstratify: "Show Aggregated (Marginal)",
+        marginalLabel: "Marginal P(Y)",
+        totalRow: "Col Marginal n\u2080\u2c7c",
+        totalCol: "Row Marginal n\u1d62\u2080",
+        cochranGood: "Cochran's Rule satisfied: all expected frequencies E\u1d62\u2c7c are \u2265 5. The asymptotic \u03c7\u00b2 approximation is reliable.",
+        cochranBad: "Warning (Cochran's Rule): at least one cell has expected frequency E\u1d62\u2c7c < 5. The \u03c7\u00b2 approximation may be inaccurate.",
+        depTitle: "Statistically Significant Dependence (Reject H\u2080)",
+        indTitle: "Consistent with Statistical Independence (Fail to Reject H\u2080)",
+        depShort: "Dependent (H\u2081)",
+        indShort: "Independent (H\u2080)"
+      }
+    };
+
+    /* =========================================================================
+       2. CURATED BIVARIATE DATASETS (GENERATED FROM RAW PAIRS)
+       ========================================================================= */
+    function expandCountsToPairs(xName, yName, xLevels, yLevels, matrix, seed = 42) {
+      const pairs = [];
+      for (let i = 0; i < xLevels.length; i++) {
+        for (let j = 0; j < yLevels.length; j++) {
+          const count = matrix[i][j];
+          for (let k = 0; k < count; k++) {
+            pairs.push({ x: xLevels[i], y: yLevels[j] });
+          }
+        }
+      }
+      // Deterministic Fisher-Yates shuffle so raw array looks like real collected records
+      let s = seed;
+      const rand = () => {
+        s = (s * 1664525 + 1013904223) % 4294967296;
+        return s / 4294967296;
+      };
+      for (let i = pairs.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+      }
+      return { xName, yName, xLevels, yLevels, pairs };
+    }
+
+    const PRESETS = [
+      {
+        id: "cyber_mfa",
+        badgeType: "dep",
+        badgeIt: "Forte Dipendenza",
+        badgeEn: "Strong Dependence",
+        titleIt: "Autenticazione MFA vs Incidenti Phishing",
+        titleEn: "MFA Authentication vs Phishing Incidents",
+        meta: "N = 300 | 3 \u00d7 2 | CyberSecurity",
+        build: () => expandCountsToPairs(
+          "Autenticazione",
+          "Esito_Attacco",
+          ["Solo Password", "SMS OTP", "Chiave FIDO2"],
+          ["Compromesso", "Bloccato"],
+          [
+            [58, 42],
+            [24, 76],
+            [4, 96]
+          ],
+          101
+        )
+      },
+      {
+        id: "coin_dice",
+        badgeType: "ind",
+        badgeIt: "Indipendenza",
+        badgeEn: "Independence",
+        titleIt: "Seme Carta Estratta vs Esito Dado",
+        titleEn: "Drawn Card Suit vs Die Roll Outcome",
+        meta: "N = 240 | 4 \u00d7 3 | Esperimento Aleatorio",
+        build: () => expandCountsToPairs(
+          "Seme_Carta",
+          "Esito_Dado",
+          ["Cuori", "Quadri", "Fiori", "Picche"],
+          ["Basso (1-2)", "Medio (3-4)", "Alto (5-6)"],
+          [
+            [19, 21, 20],
+            [21, 19, 20],
+            [20, 22, 18],
+            [20, 18, 22]
+          ],
+          202
+        )
+      },
+      {
+        id: "study_grade",
+        badgeType: "dep",
+        badgeIt: "Dipendenza Forte",
+        badgeEn: "Strong Dependence",
+        titleIt: "Ore di Studio Settimanali vs Fascia Voto",
+        titleEn: "Weekly Study Hours vs Exam Grade Band",
+        meta: "N = 270 | 3 \u00d7 3 | Didattica Universitaria",
+        build: () => expandCountsToPairs(
+          "Ore_Studio",
+          "Fascia_Voto",
+          ["< 10 ore", "10 - 20 ore", "> 20 ore"],
+          ["Insufficiente", "18 - 25", "26 - 30L"],
+          [
+            [44, 36, 10],
+            [18, 48, 24],
+            [6, 30, 54]
+          ],
+          303
+        )
+      },
+      {
+        id: "os_browser",
+        badgeType: "mod",
+        badgeIt: "Associazione Moderata",
+        badgeEn: "Moderate Association",
+        titleIt: "Sistema Operativo vs Browser Principale",
+        titleEn: "Operating System vs Primary Browser",
+        meta: "N = 250 | 3 \u00d7 3 | Telemetria Web",
+        build: () => expandCountsToPairs(
+          "Sistema_Operativo",
+          "Browser",
+          ["Windows", "macOS", "Linux"],
+          ["Chrome", "Firefox", "Safari/Edge"],
+          [
+            [52, 18, 30],
+            [34, 14, 42],
+            [25, 29, 6]
+          ],
+          404
+        )
+      }
+    ];
+
+    /* =========================================================================
+       3. EXACT STATISTICAL & SPECIAL FUNCTIONS (GAMMA, CHI2 CDF & QUANTILE)
+       ========================================================================= */
+    function logGamma(z) {
+      const c = [
+        676.5203681218851, -1259.1392167224028, 771.32342877765313,
+        -176.61502916214059, 12.507343278686905, -0.13857109526572012,
+        9.9843695780195716e-6, 1.5056327351493116e-7
+      ];
+      if (z < 0.5) {
+        return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+      }
+      z -= 1;
+      let x = 0.99999999999980993;
+      for (let i = 0; i < c.length; i++) {
+        x += c[i] / (z + i + 1);
+      }
+      const t = z + c.length - 0.5;
+      return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+    }
+
+    // Regularized lower incomplete gamma P(a, x)
+    function gammaP(a, x) {
+      if (x <= 0) return 0;
+      if (x < a + 1) {
+        let ap = a;
+        let del = 1 / a;
+        let sum = del;
+        for (let n = 1; n <= 250; n++) {
+          ap += 1;
+          del *= x / ap;
+          sum += del;
+          if (Math.abs(del) < Math.abs(sum) * 1e-14) break;
+        }
+        return sum * Math.exp(-x + a * Math.log(x) - logGamma(a));
+      } else {
+        return 1 - gammaQ(a, x);
+      }
+    }
+
+    // Regularized upper incomplete gamma Q(a, x) via Lentz continued fraction
+    function gammaQ(a, x) {
+      if (x <= 0) return 1;
+      if (x < a + 1) return 1 - gammaP(a, x);
+      let b = x + 1 - a;
+      let c = 1 / 1e-30;
+      let d = 1 / b;
+      let h = d;
+      for (let i = 1; i <= 250; i++) {
+        const an = -i * (i - a);
+        b += 2;
+        d = an * d + b;
+        if (Math.abs(d) < 1e-30) d = 1e-30;
+        c = b + an / c;
+        if (Math.abs(c) < 1e-30) c = 1e-30;
+        d = 1 / d;
+        const del = d * c;
+        h *= del;
+        if (Math.abs(del - 1) < 1e-14) break;
+      }
+      return Math.exp(-x + a * Math.log(x) - logGamma(a)) * h;
+    }
+
+    function chi2PValue(chi2, df) {
+      if (chi2 <= 0 || df <= 0) return 1;
+      return Math.max(0, Math.min(1, gammaQ(df / 2, chi2 / 2)));
+    }
+
+    function chi2Pdf(x, df) {
+      if (x <= 0) return df === 2 ? 0.5 : 0;
+      const k = df / 2;
+      const logVal = (k - 1) * Math.log(x) - x / 2 - k * Math.log(2) - logGamma(k);
+      return Math.exp(logVal);
+    }
+
+    // Acklam inverse standard normal
+    function normalInv(p) {
+      const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239];
+      const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+      const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+      const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+      const pLow = 0.02425;
+      const pHigh = 1 - pLow;
+      let q, r;
+      if (p < pLow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        return (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) / ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+      } else if (p <= pHigh) {
+        q = p - 0.5;
+        r = q * q;
+        return (((((a[0]*r + a[1])*r + a[2])*r + a[3])*r + a[4])*r + a[5])*q / (((((b[0]*r + b[1])*r + b[2])*r + b[3])*r + b[4])*r + 1);
+      } else {
+        q = Math.sqrt(-2 * Math.log(1 - p));
+        return -(((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) / ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+      }
+    }
+
+    // Inverse Chi-Square CDF via Wilson-Hilferty + Newton-Raphson
+    function chi2Quantile(p, df) {
+      const z = normalInv(p);
+      const t = 1 - 2 / (9 * df) + z * Math.sqrt(2 / (9 * df));
+      let x = Math.max(1e-4, df * Math.pow(t, 3));
+      for (let iter = 0; iter < 15; iter++) {
+        const cdf = gammaP(df / 2, x / 2);
+        const pdf = chi2Pdf(x, df);
+        if (pdf < 1e-18) break;
+        const dx = (cdf - p) / pdf;
+        x = Math.max(1e-6, x - dx);
+        if (Math.abs(dx) < 1e-10) break;
+      }
+      return x;
+    }
+
+    /* =========================================================================
+       4. APPLICATION STATE & CORE CONTINGENCY ENGINE
+       ========================================================================= */
+    const PALETTE = ["#22d3ee", "#818cf8", "#34d399", "#fbbf24", "#fb7185", "#c084fc"];
+
+    const state = {
+      lang: "it",
+      activePresetId: "cyber_mfa",
+      xName: "Autenticazione",
+      yName: "Esito_Attacco",
+      pairs: [],
+      xLevels: [],
+      yLevels: [],
+      tableMode: "observed",
+      selectedCell: { i: 0, j: 0 },
+      alpha: 0.05,
+      causalScenario: "confounder",
+      isStratified: false,
+      analysis: null
+    };
+
+    function computeContingencyAnalysis() {
+      const pairs = state.pairs;
+      const N = pairs.length;
+      if (N === 0) return null;
+
+      // Preserve preset order if levels match, else discover dynamically
+      const discoveredX = [];
+      const discoveredY = [];
+      pairs.forEach(p => {
+        if (!discoveredX.includes(p.x)) discoveredX.push(p.x);
+        if (!discoveredY.includes(p.y)) discoveredY.push(p.y);
+      });
+
+      const xLevels = (state.xLevels.length > 0 && discoveredX.every(v => state.xLevels.includes(v)) && state.xLevels.every(v => discoveredX.includes(v)))
+        ? state.xLevels
+        : discoveredX;
+      const yLevels = (state.yLevels.length > 0 && discoveredY.every(v => state.yLevels.includes(v)) && state.yLevels.every(v => discoveredY.includes(v)))
+        ? state.yLevels
+        : discoveredY;
+
+      const r = xLevels.length;
+      const c = yLevels.length;
+
+      // Programmatically tally O_ij from raw pairs
+      const O = Array.from({ length: r }, () => Array(c).fill(0));
+      pairs.forEach(p => {
+        const i = xLevels.indexOf(p.x);
+        const j = yLevels.indexOf(p.y);
+        if (i >= 0 && j >= 0) O[i][j]++;
+      });
+
+      const rowTotals = O.map(row => row.reduce((a, b) => a + b, 0));
+      const colTotals = Array.from({ length: c }, (_, j) => O.reduce((acc, row) => acc + row[j], 0));
+
+      const jointFreq = O.map(row => row.map(val => val / N));
+      const rowMarginals = rowTotals.map(val => val / N);
+      const colMarginals = colTotals.map(val => val / N);
+
+      const rowCond = O.map((row, i) => row.map(val => (rowTotals[i] > 0 ? val / rowTotals[i] : 0)));
+      const colCond = O.map((row, i) => row.map((val, j) => (colTotals[j] > 0 ? val / colTotals[j] : 0)));
+
+      const E = Array.from({ length: r }, (_, i) =>
+        Array.from({ length: c }, (_, j) => (rowTotals[i] * colTotals[j]) / N)
+      );
+
+      const chi2Cells = Array.from({ length: r }, (_, i) =>
+        Array.from({ length: c }, (_, j) => (E[i][j] > 0 ? Math.pow(O[i][j] - E[i][j], 2) / E[i][j] : 0))
+      );
+
+      const stdResiduals = Array.from({ length: r }, (_, i) =>
+        Array.from({ length: c }, (_, j) => (E[i][j] > 0 ? (O[i][j] - E[i][j]) / Math.sqrt(E[i][j]) : 0))
+      );
+
+      let chi2Total = 0;
+      let minExpected = Infinity;
+      let maxCellChi2 = 0;
+      for (let i = 0; i < r; i++) {
+        for (let j = 0; j < c; j++) {
+          chi2Total += chi2Cells[i][j];
+          if (E[i][j] < minExpected) minExpected = E[i][j];
+          if (chi2Cells[i][j] > maxCellChi2) maxCellChi2 = chi2Cells[i][j];
+        }
+      }
+
+      const df = Math.max(1, (r - 1) * (c - 1));
+      const pValue = chi2PValue(chi2Total, df);
+      const critValue = chi2Quantile(1 - state.alpha, df);
+      const minDim = Math.max(1, Math.min(r - 1, c - 1));
+      const cramersV = Math.sqrt(chi2Total / (N * minDim));
+      const isDependent = pValue < state.alpha;
+
+      if (state.selectedCell.i >= r || state.selectedCell.j >= c) {
+        state.selectedCell = { i: 0, j: 0 };
+      }
+
+      state.analysis = {
+        N, r, c, xLevels, yLevels,
+        O, rowTotals, colTotals,
+        jointFreq, rowMarginals, colMarginals,
+        rowCond, colCond,
+        E, chi2Cells, stdResiduals,
+        chi2Total, minExpected, maxCellChi2,
+        df, pValue, critValue, cramersV, isDependent
+      };
+      return state.analysis;
+    }
+
+    /* =========================================================================
+       5. RENDER FUNCTIONS
+       ========================================================================= */
+    function renderPresets() {
+      const grid = document.getElementById("presetGrid");
+      grid.innerHTML = PRESETS.map(p => {
+        const isSel = state.activePresetId === p.id;
+        const badgeCls = p.badgeType === "dep" ? "badge-dep" : (p.badgeType === "ind" ? "badge-ind" : "badge-mod");
+        const badgeTxt = state.lang === "it" ? p.badgeIt : p.badgeEn;
+        const titleTxt = state.lang === "it" ? p.titleIt : p.titleEn;
+        return `
+          <button class="preset-card ${isSel ? "selected" : ""}" data-preset="${p.id}">
+            <span class="preset-badge ${badgeCls}">${badgeTxt}</span>
+            <div class="preset-title">${titleTxt}</div>
+            <div class="preset-meta">${p.meta}</div>
+          </button>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".preset-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-preset");
+          const preset = PRESETS.find(item => item.id === id);
+          if (!preset) return;
+          state.activePresetId = id;
+          const built = preset.build();
+          state.xName = built.xName;
+          state.yName = built.yName;
+          state.xLevels = built.xLevels;
+          state.yLevels = built.yLevels;
+          state.pairs = built.pairs;
+          refreshAll();
+        });
+      });
+    }
+
+    function renderRawPreview() {
+      const a = state.analysis;
+      if (!a) return;
+      const t = I18N[state.lang];
+      document.getElementById("rawStripTitle").textContent =
+        state.lang === "it"
+          ? `Array Bivariato Grezzo (${state.xName}, ${state.yName}) — Prime 36 osservazioni su N = ${a.N}:`
+          : `Raw Bivariate Array (${state.xName}, ${state.yName}) — First 36 observations out of N = ${a.N}:`;
+
+      document.getElementById("rawVarsSummary").textContent =
+        `${a.r} \u00d7 ${a.c} | df = ${a.df} | ${a.isDependent ? t.depShort : t.indShort}`;
+
+      const chips = state.pairs.slice(0, 36).map((p, idx) =>
+        `<span class="raw-chip">#${idx + 1}: (${p.x}, ${p.y})</span>`
+      ).join("");
+      document.getElementById("rawChipsContainer").innerHTML = chips;
+
+      // Also update raw editor mini-table
+      document.getElementById("thRawX").textContent = state.xName;
+      document.getElementById("thRawY").textContent = state.yName;
+      document.getElementById("rawTableCount").textContent =
+        state.lang === "it"
+          ? `Record osservati nel dataset attivo: ${a.N} (mostrati ultimi 60)`
+          : `Observed records in active dataset: ${a.N} (showing latest 60)`;
+
+      const startIdx = Math.max(0, state.pairs.length - 60);
+      const rowsHtml = state.pairs.slice(startIdx).map((p, offset) => {
+        const realIdx = startIdx + offset;
+        return `
+          <tr>
+            <td>${realIdx + 1}</td>
+            <td>${p.x}</td>
+            <td>${p.y}</td>
+            <td><button class="del-row-btn" data-del-idx="${realIdx}">&times;</button></td>
+          </tr>
+        `;
+      }).join("");
+      const tbody = document.getElementById("rawObsTbody");
+      tbody.innerHTML = rowsHtml;
+      tbody.querySelectorAll(".del-row-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (state.pairs.length <= 2) return;
+          const idx = Number(btn.getAttribute("data-del-idx"));
+          state.pairs.splice(idx, 1);
+          state.activePresetId = "custom";
+          refreshAll();
+        });
+      });
+    }
+
+    function renderKPIs() {
+      const a = state.analysis;
+      if (!a) return;
+      const t = I18N[state.lang];
+      document.getElementById("kpiN").textContent = a.N;
+      document.getElementById("kpiDim").textContent =
+        state.lang === "it"
+          ? `Griglia ${a.r} \u00d7 ${a.c} (df = ${a.df})`
+          : `Grid ${a.r} \u00d7 ${a.c} (df = ${a.df})`;
+
+      document.getElementById("kpiChi2Val").textContent = a.chi2Total.toFixed(3);
+      document.getElementById("kpiCritSub").textContent =
+        state.lang === "it"
+          ? `Soglia \u03c7\u00b2(${state.alpha}) = ${a.critValue.toFixed(3)}`
+          : `Crit \u03c7\u00b2(${state.alpha}) = ${a.critValue.toFixed(3)}`;
+
+      document.getElementById("kpiPVal").textContent = a.pValue < 0.0001 ? "< 0.0001" : a.pValue.toFixed(4);
+      document.getElementById("kpiAlphaSub").textContent = `\u03b1 = ${state.alpha}`;
+
+      const cramerEl = document.getElementById("kpiCramerVal");
+      cramerEl.textContent = a.cramersV.toFixed(3);
+      cramerEl.style.color = a.isDependent ? "#fb7185" : "#34d399";
+      document.getElementById("kpiVerdictShort").textContent = a.isDependent ? t.depShort : t.indShort;
+    }
+
+    function renderContingencyTable() {
+      const a = state.analysis;
+      if (!a) return;
+      const t = I18N[state.lang];
+      const mode = state.tableMode;
+
+      let html = `<table class="ct-table"><thead><tr>
+        <th class="axis-corner">${state.xName} \\ ${state.yName}</th>
+        ${a.yLevels.map(y => `<th>${y}</th>`).join("")}
+        <th>${t.totalCol}</th>
+      </tr></thead><tbody>`;
+
+      for (let i = 0; i < a.r; i++) {
+        html += `<tr><th class="row-header">${a.xLevels[i]}</th>`;
+        for (let j = 0; j < a.c; j++) {
+          const isSel = state.selectedCell.i === i && state.selectedCell.j === j;
+          let mainTxt = "";
+          let subTxt = "";
+          let barPct = 0;
+          let heatBg = "";
+
+          if (mode === "observed") {
+            mainTxt = `${a.O[i][j]}`;
+            subTxt = `f = ${(a.jointFreq[i][j] * 100).toFixed(1)}%`;
+            barPct = a.jointFreq[i][j] * 100;
+          } else if (mode === "rowCond") {
+            const pct = a.rowCond[i][j] * 100;
+            mainTxt = `${pct.toFixed(1)}%`;
+            subTxt = `${a.O[i][j]} / ${a.rowTotals[i]}`;
+            barPct = pct;
+          } else if (mode === "colCond") {
+            const pct = a.colCond[i][j] * 100;
+            mainTxt = `${pct.toFixed(1)}%`;
+            subTxt = `${a.O[i][j]} / ${a.colTotals[j]}`;
+            barPct = pct;
+          } else if (mode === "expected") {
+            const warn = a.E[i][j] < 5 ? " \u26a0" : "";
+            mainTxt = `${a.E[i][j].toFixed(2)}${warn}`;
+            subTxt = `O = ${a.O[i][j]} (\u0394 ${(a.O[i][j] - a.E[i][j] >= 0 ? "+" : "")}${(a.O[i][j] - a.E[i][j]).toFixed(1)})`;
+          } else if (mode === "chi2") {
+            const cVal = a.chi2Cells[i][j];
+            const share = a.chi2Total > 0 ? (cVal / a.chi2Total) * 100 : 0;
+            const intensity = a.maxCellChi2 > 0 ? Math.min(0.62, (cVal / a.maxCellChi2) * 0.58) : 0;
+            heatBg = `background: rgba(244, 63, 94, ${intensity.toFixed(3)});`;
+            mainTxt = `${cVal.toFixed(3)}`;
+            subTxt = `${share.toFixed(1)}% \u03c7\u00b2`;
+          }
+
+          html += `
+            <td class="ct-cell ${isSel ? "selected-cell" : ""}" data-i="${i}" data-j="${j}" style="${heatBg}">
+              ${barPct > 0 ? `<div class="cell-bar-fill" style="width: ${barPct.toFixed(1)}%;"></div>` : ""}
+              <div class="cell-main">${mainTxt}</div>
+              <div class="cell-sub">${subTxt}</div>
+            </td>
+          `;
+        }
+
+        // Row Marginal Cell
+        let rowMargMain = `${a.rowTotals[i]}`;
+        let rowMargSub = `f\u1d62\u2080 = ${(a.rowMarginals[i] * 100).toFixed(1)}%`;
+        if (mode === "rowCond") {
+          rowMargMain = "100.0%";
+          rowMargSub = `n = ${a.rowTotals[i]}`;
+        }
+        html += `<td class="marginal-cell"><div>${rowMargMain}</div><div class="cell-sub">${rowMargSub}</div></td></tr>`;
+      }
+
+      // Bottom Column Marginal Row
+      html += `<tr><th class="row-header">${t.totalRow}</th>`;
+      for (let j = 0; j < a.c; j++) {
+        let colMargMain = `${a.colTotals[j]}`;
+        let colMargSub = `f\u2080\u2c7c = ${(a.colMarginals[j] * 100).toFixed(1)}%`;
+        if (mode === "colCond") {
+          colMargMain = "100.0%";
+          colMargSub = `n = ${a.colTotals[j]}`;
+        } else if (mode === "rowCond") {
+          colMargMain = `${(a.colMarginals[j] * 100).toFixed(1)}%`;
+          colMargSub = `P(Y = ${a.yLevels[j]})`;
+        }
+        html += `<td class="marginal-cell"><div>${colMargMain}</div><div class="cell-sub">${colMargSub}</div></td>`;
+      }
+      html += `<td class="grand-total"><div>N = ${a.N}</div><div class="cell-sub">100.0%</div></td></tr></tbody></table>`;
+
+      const wrap = document.getElementById("contingencyTableWrapper");
+      wrap.innerHTML = html;
+
+      wrap.querySelectorAll("td.ct-cell").forEach(td => {
+        td.addEventListener("click", () => {
+          state.selectedCell = {
+            i: Number(td.getAttribute("data-i")),
+            j: Number(td.getAttribute("data-j"))
+          };
+          renderContingencyTable();
+          renderCellInspector();
+        });
+      });
+
+      // Cochran check
+      const cochranEl = document.getElementById("cochranStatus");
+      if (a.minExpected >= 5) {
+        cochranEl.className = "cochran-alert cochran-ok";
+        cochranEl.textContent = `\u2713 ${t.cochranGood} (min E\u1d62\u2c7c = ${a.minExpected.toFixed(2)})`;
+      } else {
+        cochranEl.className = "cochran-alert cochran-warn";
+        cochranEl.textContent = `\u26a0 ${t.cochranBad} (min E\u1d62\u2c7c = ${a.minExpected.toFixed(2)})`;
+      }
+    }
+
+    function renderCellInspector() {
+      const a = state.analysis;
+      if (!a) return;
+      const { i, j } = state.selectedCell;
+      const xLab = a.xLevels[i];
+      const yLab = a.yLevels[j];
+      const Oij = a.O[i][j];
+      const ni = a.rowTotals[i];
+      const nj = a.colTotals[j];
+      const Eij = a.E[i][j];
+      const diff = Oij - Eij;
+      const chi2ij = a.chi2Cells[i][j];
+
+      document.getElementById("inspCoords").textContent = `Cella (${i + 1}, ${j + 1})`;
+      const isIt = state.lang === "it";
+
+      document.getElementById("inspectorBody").innerHTML = `
+        <div class="calc-line">
+          <span class="calc-line-label">${isIt ? "Modalit\u00e0 Selezionate" : "Selected Categories"}</span>
+          X = <strong>${xLab}</strong> &nbsp;|&nbsp; Y = <strong>${yLab}</strong>
+        </div>
+        <div class="calc-line">
+          <span class="calc-line-label">${isIt ? "Frequenza Congiunta Osservata" : "Joint Observed Frequency"}</span>
+          O<sub>${i+1},${j+1}</sub> = <strong>${Oij}</strong> &nbsp;&rarr;&nbsp; f<sub>${i+1},${j+1}</sub> = ${Oij}/${a.N} = <strong>${(a.jointFreq[i][j]*100).toFixed(2)}%</strong>
+        </div>
+        <div class="calc-line">
+          <span class="calc-line-label">${isIt ? "Probabilit\u00e0 Condizionate" : "Conditional Probabilities"}</span>
+          P(Y=${yLab} | X=${xLab}) = ${Oij}/${ni} = <strong>${(a.rowCond[i][j]*100).toFixed(2)}%</strong><br/>
+          P(X=${xLab} | Y=${yLab}) = ${Oij}/${nj} = <strong>${(a.colCond[i][j]*100).toFixed(2)}%</strong>
+        </div>
+        <div class="calc-line">
+          <span class="calc-line-label">${isIt ? "Frequenza Attesa sotto Indipendenza H\u2080" : "Expected Frequency under Independence H\u2080"}</span>
+          E<sub>${i+1},${j+1}</sub> = (n<sub>${i+1}&middot;</sub> &times; n<sub>&middot;${j+1}</sub>) / N = (${ni} &times; ${nj}) / ${a.N} = <strong>${Eij.toFixed(3)}</strong>
+        </div>
+        <div class="calc-line" style="border-color: rgba(6, 182, 212, 0.4);">
+          <span class="calc-line-label">${isIt ? "Contributo alla Statistica \u03c7\u00b2" : "Contribution to \u03c7\u00b2 Statistic"}</span>
+          (O &minus; E)&sup2; / E = (${Oij} &minus; ${Eij.toFixed(2)})&sup2; / ${Eij.toFixed(2)} = (${diff >= 0 ? "+" : ""}${diff.toFixed(2)})&sup2; / ${Eij.toFixed(2)} = <strong style="color: #22d3ee;">${chi2ij.toFixed(4)}</strong>
+        </div>
+      `;
+    }
+
+    function renderVisualCharts() {
+      const a = state.analysis;
+      if (!a) return;
+      const t = I18N[state.lang];
+
+      // 1. Stacked Horizontal Conditional Bars
+      const legendHtml = a.yLevels.map((y, j) => `
+        <span class="legend-item">
+          <span class="legend-swatch" style="background: ${PALETTE[j % PALETTE.length]};"></span>
+          ${y}
+        </span>
+      `).join("");
+      document.getElementById("stackedLegend").innerHTML = legendHtml;
+
+      let barsHtml = "";
+      for (let i = 0; i < a.r; i++) {
+        const segs = a.yLevels.map((y, j) => {
+          const pct = a.rowCond[i][j] * 100;
+          return `<div class="stacked-segment" style="width: ${pct.toFixed(2)}%; background: ${PALETTE[j % PALETTE.length]};" title="${y}: ${pct.toFixed(1)}%">${pct >= 11 ? pct.toFixed(0) + "%" : ""}</div>`;
+        }).join("");
+        barsHtml += `
+          <div class="stacked-row">
+            <div class="stacked-row-label">
+              <span>P(Y | X = <strong>${a.xLevels[i]}</strong>)</span>
+              <span style="font-family: var(--font-mono); color: var(--text-secondary);">n = ${a.rowTotals[i]}</span>
+            </div>
+            <div class="stacked-bar-track">${segs}</div>
+          </div>
+        `;
+      }
+
+      // Marginal Benchmark Row
+      const margSegs = a.yLevels.map((y, j) => {
+        const pct = a.colMarginals[j] * 100;
+        return `<div class="stacked-segment" style="width: ${pct.toFixed(2)}%; background: ${PALETTE[j % PALETTE.length]};" title="${y}: ${pct.toFixed(1)}%">${pct >= 11 ? pct.toFixed(0) + "%" : ""}</div>`;
+      }).join("");
+      barsHtml += `
+        <div class="stacked-row" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed rgba(103, 232, 249, 0.35);">
+          <div class="stacked-row-label marginal-benchmark">
+            <span>${t.marginalLabel} [Benchmark H\u2080]</span>
+            <span style="font-family: var(--font-mono);">N = ${a.N}</span>
+          </div>
+          <div class="stacked-bar-track" style="border-color: rgba(103, 232, 249, 0.55);">${margSegs}</div>
+        </div>
+      `;
+      document.getElementById("stackedBarsContainer").innerHTML = barsHtml;
+
+      // 2. Standardized Pearson Residuals Bar Chart
+      const flatCells = [];
+      let maxAbsRes = 2.5;
+      for (let i = 0; i < a.r; i++) {
+        for (let j = 0; j < a.c; j++) {
+          const val = a.stdResiduals[i][j];
+          if (Math.abs(val) > maxAbsRes) maxAbsRes = Math.abs(val);
+          flatCells.push({
+            label: `${a.xLevels[i]} \u00d7 ${a.yLevels[j]}`,
+            val
+          });
+        }
+      }
+
+      const resHtml = flatCells.slice(0, 12).map(item => {
+        const pct = (Math.abs(item.val) / maxAbsRes) * 46;
+        const isPos = item.val >= 0;
+        const color = Math.abs(item.val) >= 1.96
+          ? (isPos ? "#34d399" : "#fb7185")
+          : "#64748b";
+        return `
+          <div style="margin-bottom: 0.52rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.16rem;">
+              <span style="color: #cbd5e1;">${item.label}</span>
+              <span style="font-family: var(--font-mono); color: ${color}; font-weight: 700;">${item.val >= 0 ? "+" : ""}${item.val.toFixed(2)}</span>
+            </div>
+            <div style="height: 11px; background: rgba(15,23,42,0.9); border-radius: 6px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.25);"></div>
+              <div style="position: absolute; top: 0; bottom: 0; ${isPos ? "left: 50%;" : `right: 50%;`} width: ${pct.toFixed(1)}%; background: ${color}; border-radius: 3px; transition: width 0.35s ease;"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+      document.getElementById("residualsChartContainer").innerHTML = resHtml;
+    }
+
+    function renderInferenceAndCurve() {
+      const a = state.analysis;
+      if (!a) return;
+      const t = I18N[state.lang];
+
+      // Verdict Banner
+      const banner = document.getElementById("verdictBanner");
+      banner.className = `verdict-banner ${a.isDependent ? "verdict-dep" : "verdict-ind"}`;
+      document.getElementById("verdictTitle").textContent = a.isDependent ? t.depTitle : t.indTitle;
+
+      const pStr = a.pValue < 0.0001 ? "< 0.0001" : a.pValue.toFixed(4);
+      if (state.lang === "it") {
+        document.getElementById("verdictText").innerHTML = a.isDependent
+          ? `Poich&eacute; <strong>&chi;&sup2; = ${a.chi2Total.toFixed(3)} &gt; &chi;&sup2;<sub>${state.alpha}, ${a.df}</sub> = ${a.critValue.toFixed(3)}</strong> (p-value = <strong>${pStr}</strong> &lt; &alpha; = ${state.alpha}), rifiutiamo l'ipotesi nulla di indipendenza. Le variabili <strong>${state.xName}</strong> e <strong>${state.yName}</strong> presentano un'associazione statisticamente significativa (V di Cram&eacute;r = ${a.cramersV.toFixed(3)}).`
+          : `Poich&eacute; <strong>&chi;&sup2; = ${a.chi2Total.toFixed(3)} &le; &chi;&sup2;<sub>${state.alpha}, ${a.df}</sub> = ${a.critValue.toFixed(3)}</strong> (p-value = <strong>${pStr}</strong> &ge; &alpha; = ${state.alpha}), non vi &egrave; evidenza sufficiente per rifiutare H<sub>0</sub>. Gli scarti tra O<sub>ij</sub> ed E<sub>ij</sub> sono compatibili con la variabilit&agrave; campionaria casuale.`;
+      } else {
+        document.getElementById("verdictText").innerHTML = a.isDependent
+          ? `Since <strong>&chi;&sup2; = ${a.chi2Total.toFixed(3)} &gt; &chi;&sup2;<sub>${state.alpha}, ${a.df}</sub> = ${a.critValue.toFixed(3)}</strong> (p-value = <strong>${pStr}</strong> &lt; &alpha; = ${state.alpha}), we reject the null hypothesis of independence. <strong>${state.xName}</strong> and <strong>${state.yName}</strong> exhibit a statistically significant association (Cram&eacute;r's V = ${a.cramersV.toFixed(3)}).`
+          : `Since <strong>&chi;&sup2; = ${a.chi2Total.toFixed(3)} &le; &chi;&sup2;<sub>${state.alpha}, ${a.df}</sub> = ${a.critValue.toFixed(3)}</strong> (p-value = <strong>${pStr}</strong> &ge; &alpha; = ${state.alpha}), there is insufficient evidence to reject H<sub>0</sub>. Deviations between O<sub>ij</sub> and E<sub>ij</sub> are consistent with random sampling variation.`;
+      }
+
+      // Step-by-step algebraic sum
+      const terms = [];
+      for (let i = 0; i < a.r; i++) {
+        for (let j = 0; j < a.c; j++) {
+          terms.push(
+            `(${a.O[i][j]} &minus; ${a.E[i][j].toFixed(2)})&sup2;/${a.E[i][j].toFixed(2)} = <span style="color:#22d3ee;">${a.chi2Cells[i][j].toFixed(3)}</span>`
+          );
+        }
+      }
+      document.getElementById("chi2AlgebraBox").innerHTML = `
+        <div><strong>df</strong> = (r &minus; 1)(c &minus; 1) = (${a.r} &minus; 1)(${a.c} &minus; 1) = <span style="color:#a5b4fc;">${a.df}</span></div>
+        <div style="margin-top: 0.35rem;"><strong>&chi;&sup2;</strong> = ${terms.join(" + ")}</div>
+        <div style="margin-top: 0.45rem; padding-top: 0.4rem; border-top: 1px dashed rgba(148,163,184,0.2);">
+          <strong>&chi;&sup2;<sub>obs</sub> = <span style="color:#34d399;">${a.chi2Total.toFixed(4)}</span></strong> &nbsp;|&nbsp;
+          <strong>p-value = <span style="color:#fbbf24;">${pStr}</span></strong> &nbsp;|&nbsp;
+          <strong>V = <span style="color:#c084fc;">${a.cramersV.toFixed(4)}</span></strong>
+        </div>
+      `;
+
+      // Interactive SVG Chi-Square PDF Curve
+      document.getElementById("pdfChartTitle").textContent =
+        state.lang === "it" ? `Densit\u00e0 Teorica \u03c7\u00b2 (df = ${a.df})` : `Theoretical \u03c7\u00b2 Density (df = ${a.df})`;
+      document.getElementById("pdfRegionTag").textContent =
+        state.lang === "it" ? `Regione di rifiuto \u03b1 = ${state.alpha}` : `Rejection region \u03b1 = ${state.alpha}`;
+
+      drawChi2Svg(a.df, a.chi2Total, a.critValue);
+    }
+
+    function drawChi2Svg(df, chi2Obs, critVal) {
+      const svg = document.getElementById("chi2PdfSvg");
+      const W = 600, H = 310;
+      const padL = 46, padR = 24, padT = 26, padB = 38;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      const xMax = Math.max(critVal * 1.45, chi2Obs * 1.22, df + 4 * Math.sqrt(2 * df), 10);
+      const steps = 180;
+      let maxY = 0;
+      const pts = [];
+      for (let s = 0; s <= steps; s++) {
+        const x = (s / steps) * xMax;
+        const y = chi2Pdf(x, df);
+        if (Number.isFinite(y)) {
+          if (y > maxY) maxY = y;
+          pts.push({ x, y });
+        }
+      }
+      if (maxY <= 0) maxY = 0.5;
+      maxY *= 1.15;
+
+      const toSvgX = x => padL + (x / xMax) * plotW;
+      const toSvgY = y => padT + plotH - (y / maxY) * plotH;
+
+      // Full curve path
+      let lineD = "";
+      pts.forEach((p, idx) => {
+        const sx = toSvgX(p.x).toFixed(1);
+        const sy = toSvgY(p.y).toFixed(1);
+        lineD += idx === 0 ? `M ${sx} ${sy}` : ` L ${sx} ${sy}`;
+      });
+
+      // Rejection area path (x >= critVal)
+      const critPts = pts.filter(p => p.x >= critVal);
+      let rejD = "";
+      if (critPts.length > 0) {
+        rejD = `M ${toSvgX(critVal).toFixed(1)} ${toSvgY(0).toFixed(1)} L ${toSvgX(critVal).toFixed(1)} ${toSvgY(chi2Pdf(critVal, df)).toFixed(1)}`;
+        critPts.forEach(p => {
+          rejD += ` L ${toSvgX(p.x).toFixed(1)} ${toSvgY(p.y).toFixed(1)}`;
+        });
+        rejD += ` L ${toSvgX(xMax).toFixed(1)} ${toSvgY(0).toFixed(1)} Z`;
+      }
+
+      const obsX = Math.min(W - padR, toSvgX(chi2Obs));
+      const critX = toSvgX(critVal);
+
+      // X-axis ticks
+      const tickCount = 6;
+      let ticksHtml = "";
+      for (let k = 0; k <= tickCount; k++) {
+        const xv = (k / tickCount) * xMax;
+        const sx = toSvgX(xv);
+        ticksHtml += `
+          <line x1="${sx}" y1="${padT + plotH}" x2="${sx}" y2="${padT + plotH + 5}" stroke="#64748b" stroke-width="1"/>
+          <text x="${sx}" y="${padT + plotH + 19}" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">${xv.toFixed(1)}</text>
+        `;
+      }
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="rejGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="#f43f5e" stop-opacity="0.08"/>
+          </linearGradient>
+        </defs>
+        <!-- Axes -->
+        <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#475569" stroke-width="1.3"/>
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="#475569" stroke-width="1.3"/>
+        ${ticksHtml}
+
+        <!-- Rejection Region -->
+        ${rejD ? `<path d="${rejD}" fill="url(#rejGrad)"/>` : ""}
+
+        <!-- PDF Curve -->
+        <path d="${lineD}" fill="none" stroke="#22d3ee" stroke-width="2.6"/>
+
+        <!-- Critical Threshold Line -->
+        <line x1="${critX}" y1="${padT + 14}" x2="${critX}" y2="${padT + plotH}" stroke="#f43f5e" stroke-width="1.6" stroke-dasharray="5 4"/>
+        <text x="${critX}" y="${padT + 10}" fill="#fda4af" font-size="11" font-family="monospace" text-anchor="middle">&chi;&sup2;crit=${critVal.toFixed(2)}</text>
+
+        <!-- Observed Chi2 Line -->
+        <line x1="${obsX}" y1="${padT + 28}" x2="${obsX}" y2="${padT + plotH}" stroke="#34d399" stroke-width="2.2"/>
+        <circle cx="${obsX}" cy="${toSvgY(chi2Pdf(chi2Obs, df))}" r="4.5" fill="#34d399"/>
+        <text x="${Math.min(W - 55, Math.max(padL + 45, obsX))}" y="${padT + 23}" fill="#6ee7b7" font-size="11" font-family="monospace" font-weight="bold" text-anchor="middle">&chi;&sup2;obs=${chi2Obs.toFixed(2)}</text>
+
+        <!-- Interactive Crosshair -->
+        <g id="pdfCrosshair" style="display: none;">
+          <line id="crossV" x1="0" y1="${padT}" x2="0" y2="${padT + plotH}" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3 3"/>
+          <circle id="crossDot" cx="0" cy="0" r="4" fill="#fbbf24"/>
+        </g>
+      `;
+
+      svg.onmousemove = (evt) => {
+        const rect = svg.getBoundingClientRect();
+        const relX = ((evt.clientX - rect.left) / rect.width) * W;
+        const clampedX = Math.max(padL, Math.min(W - padR, relX));
+        const xVal = ((clampedX - padL) / plotW) * xMax;
+        const yVal = chi2Pdf(xVal, df);
+        const tailP = chi2PValue(xVal, df);
+
+        const ch = svg.getElementById("pdfCrosshair");
+        const cv = svg.getElementById("crossV");
+        const cd = svg.getElementById("crossDot");
+        if (ch && cv && cd) {
+          ch.style.display = "block";
+          cv.setAttribute("x1", clampedX);
+          cv.setAttribute("x2", clampedX);
+          cd.setAttribute("cx", clampedX);
+          cd.setAttribute("cy", toSvgY(yVal));
+        }
+        document.getElementById("pdfHoverX").textContent = `x = ${xVal.toFixed(2)} | f(x) = ${yVal.toFixed(4)}`;
+        document.getElementById("pdfHoverTail").textContent = `P(\u03c7\u00b2 \u2265 ${xVal.toFixed(2)}) = ${tailP.toFixed(4)}`;
+      };
+
+      svg.onmouseleave = () => {
+        const ch = svg.getElementById("pdfCrosshair");
+        if (ch) ch.style.display = "none";
+      };
+    }
+
+    /* =========================================================================
+       6. CAUSAL DAG EXPLORER & STRATIFICATION BY CONFOUNDER Z
+       ========================================================================= */
+    function renderCausalExplorer() {
+      const scen = state.causalScenario;
+      const isIt = state.lang === "it";
+      const svg = document.getElementById("causalDagSvg");
+      const caption = document.getElementById("dagCaption");
+      const stratBtn = document.getElementById("btnToggleStratify");
+      const stratExpl = document.getElementById("stratExplanation");
+      const stratArea = document.getElementById("stratContentArea");
+
+      stratBtn.textContent = state.isStratified ? I18N[state.lang].btnUnstratify : I18N[state.lang].btnStratify;
+
+      if (scen === "confounder") {
+        svg.innerHTML = `
+          <defs>
+            <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#22d3ee"/>
+            </marker>
+          </defs>
+          <!-- Confounder Z at top -->
+          <rect x="195" y="18" width="170" height="52" rx="12" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="2"/>
+          <text x="280" y="41" fill="#fcd34d" font-size="13" font-weight="bold" text-anchor="middle">Z: Temperatura Estiva</text>
+          <text x="280" y="58" fill="#cbd5e1" font-size="11" font-family="monospace" text-anchor="middle">(Variabile Confondente)</text>
+
+          <!-- X at bottom left -->
+          <rect x="35" y="182" width="185" height="56" rx="12" fill="rgba(99, 102, 241, 0.2)" stroke="#818cf8" stroke-width="2"/>
+          <text x="127" y="207" fill="#e0e7ff" font-size="13" font-weight="bold" text-anchor="middle">X: Consumo Gelati</text>
+          <text x="127" y="224" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Alto vs Basso)</text>
+
+          <!-- Y at bottom right -->
+          <rect x="340" y="182" width="185" height="56" rx="12" fill="rgba(6, 182, 212, 0.2)" stroke="#22d3ee" stroke-width="2"/>
+          <text x="432" y="207" fill="#cffafe" font-size="13" font-weight="bold" text-anchor="middle">Y: Bagni in Mare</text>
+          <text x="432" y="224" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Frequente vs Raro)</text>
+
+          <!-- Causal Arrows Z -> X and Z -> Y -->
+          <line x1="235" y1="70" x2="145" y2="176" stroke="#22d3ee" stroke-width="2.4" class="dag-pulse-path" marker-end="url(#arrowCyan)"/>
+          <line x1="325" y1="70" x2="415" y2="176" stroke="#22d3ee" stroke-width="2.4" class="dag-pulse-path" marker-end="url(#arrowCyan)"/>
+
+          <!-- Spurious dashed association between X and Y -->
+          <line x1="224" y1="210" x2="336" y2="210" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4 4"/>
+          <text x="280" y="200" fill="#fda4af" font-size="11" font-family="monospace" text-anchor="middle">Associazione Spuria</text>
+          <text x="280" y="226" fill="#fda4af" font-size="10" font-family="monospace" text-anchor="middle">(Nessun arco causale)</text>
+        `;
+
+        caption.textContent = isIt
+          ? "Nel dataset aggregato (marginale su Z), X e Y risultano fortemente dipendenti (\u03c7\u00b2 = 54.0, p < 0.0001). Tuttavia, Z influenza entrambi."
+          : "In the aggregated dataset (marginalized over Z), X and Y appear strongly dependent (\u03c7\u00b2 = 54.0, p < 0.0001). However, Z drives both.";
+
+        stratBtn.style.display = "inline-block";
+
+        if (!state.isStratified) {
+          stratExpl.textContent = isIt
+            ? "Tavola aggregata senza controllare per Z (N = 300): il test \u03c7\u00b2 rileva una forte dipendenza apparente tra consumo di gelati e bagni in mare."
+            : "Aggregated table without controlling for Z (N = 300): the \u03c7\u00b2 test detects a strong apparent dependence between ice cream consumption and swimming.";
+          stratArea.innerHTML = `
+            <div class="mini-strat-card" style="margin-top: 0.85rem;">
+              <h4>${isIt ? "Tavola Aggregata (Ignorando Z)" : "Aggregated Table (Ignoring Z)"} &mdash; &chi;&sup2; = 54.00, p &lt; 0.0001</h4>
+              <table class="mini-strat-table">
+                <tr><th>X \\ Y</th><th>${isIt ? "Bagni Frequenti" : "Frequent Swim"}</th><th>${isIt ? "Bagni Rari" : "Rare Swim"}</th></tr>
+                <tr><td>${isIt ? "Gelati Alti" : "High Ice Cream"}</td><td>105 (70%)</td><td>45 (30%)</td></tr>
+                <tr><td>${isIt ? "Gelati Bassi" : "Low Ice Cream"}</td><td>45 (30%)</td><td>105 (70%)</td></tr>
+              </table>
+              <div style="font-size: 0.78rem; color: #fda4af;">
+                ${isIt ? "Clicca 'Stratifica per Z' per condizionare alla temperatura (Estate vs Inverno)." : "Click 'Stratify by Z' to condition on temperature (Summer vs Winter)."}
+              </div>
+            </div>
+          `;
+        } else {
+          stratExpl.textContent = isIt
+            ? "Condizionando a Z (X \u22a5 Y | Z): all'interno di ciascuna stagione, la distribuzione di Y non dipende pi\u00f9 da X (\u03c7\u00b2 = 0.00, p = 1.00). L'associazione spuria svanisce!"
+            : "Conditioning on Z (X \u22a5 Y | Z): within each season, the distribution of Y no longer depends on X (\u03c7\u00b2 = 0.00, p = 1.00). The spurious association vanishes!";
+          stratArea.innerHTML = `
+            <div class="strat-grid">
+              <div class="mini-strat-card">
+                <h4>Z = ${isIt ? "Estate (Caldo)" : "Summer (Hot)"}</h4>
+                <table class="mini-strat-table">
+                  <tr><th>X \\ Y</th><th>Freq</th><th>Rari</th></tr>
+                  <tr><td>Alti</td><td>96 (80%)</td><td>24 (20%)</td></tr>
+                  <tr><td>Bassi</td><td>24 (80%)</td><td>6 (20%)</td></tr>
+                </table>
+                <div style="font-size: 0.75rem; color: #6ee7b7; font-family: monospace;">&chi;&sup2; = 0.00, p = 1.00 (Indip.)</div>
+              </div>
+              <div class="mini-strat-card">
+                <h4>Z = ${isIt ? "Inverno (Freddo)" : "Winter (Cold)"}</h4>
+                <table class="mini-strat-table">
+                  <tr><th>X \\ Y</th><th>Freq</th><th>Rari</th></tr>
+                  <tr><td>Alti</td><td>6 (20%)</td><td>24 (80%)</td></tr>
+                  <tr><td>Bassi</td><td>24 (20%)</td><td>96 (80%)</td></tr>
+                </table>
+                <div style="font-size: 0.75rem; color: #6ee7b7; font-family: monospace;">&chi;&sup2; = 0.00, p = 1.00 (Indip.)</div>
+              </div>
+            </div>
+          `;
+        }
+      } else if (scen === "direct") {
+        stratBtn.style.display = "none";
+        svg.innerHTML = `
+          <defs>
+            <marker id="arrowEmerald" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#34d399"/>
+            </marker>
+          </defs>
+          <rect x="40" y="102" width="185" height="64" rx="12" fill="rgba(99, 102, 241, 0.22)" stroke="#818cf8" stroke-width="2"/>
+          <text x="132" y="129" fill="#e0e7ff" font-size="13" font-weight="bold" text-anchor="middle">X: Intervento / Dose</text>
+          <text x="132" y="148" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Assegnazione Random)</text>
+
+          <rect x="335" y="102" width="185" height="64" rx="12" fill="rgba(16, 185, 129, 0.2)" stroke="#34d399" stroke-width="2"/>
+          <text x="427" y="129" fill="#d1fae5" font-size="13" font-weight="bold" text-anchor="middle">Y: Risposta Clinica</text>
+          <text x="427" y="148" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Guarigione vs No)</text>
+
+          <line x1="228" y1="134" x2="328" y2="134" stroke="#34d399" stroke-width="3" class="dag-pulse-path" marker-end="url(#arrowEmerald)"/>
+          <text x="280" y="120" fill="#6ee7b7" font-size="11" font-family="monospace" text-anchor="middle">Effetto Causale P(Y | do(X))</text>
+        `;
+        caption.textContent = isIt
+          ? "Quando X \u00e8 assegnato tramite esperimento randomizzato (RCT), eventuali variabili confondenti Z sono bilanciate: la dipendenza statistica identifica l'effetto causale diretto X \u2192 Y."
+          : "When X is assigned via a randomized controlled trial (RCT), confounders Z are balanced: statistical dependence identifies the direct causal effect X \u2192 Y.";
+        stratExpl.textContent = isIt
+          ? "Nota metodologica: il test \u03c7\u00b2 su dati osservazionali non distingue X \u2192 Y da Y \u2192 X o X \u2190 Z \u2192 Y, poich\u00e9 \u03c7\u00b2 \u00e8 una misura simmetrica rispetto a righe e colonne."
+          : "Methodological note: the \u03c7\u00b2 test on observational data cannot distinguish X \u2192 Y from Y \u2192 X or X \u2190 Z \u2192 Y, because \u03c7\u00b2 is symmetric with respect to rows and columns.";
+        stratArea.innerHTML = "";
+      } else {
+        stratBtn.style.display = "none";
+        svg.innerHTML = `
+          <defs>
+            <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#fbbf24"/>
+            </marker>
+          </defs>
+          <rect x="40" y="102" width="185" height="64" rx="12" fill="rgba(99, 102, 241, 0.22)" stroke="#818cf8" stroke-width="2"/>
+          <text x="132" y="129" fill="#e0e7ff" font-size="13" font-weight="bold" text-anchor="middle">X: Sintomo / Indicatore</text>
+          <text x="132" y="148" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Osservato per primo)</text>
+
+          <rect x="335" y="102" width="185" height="64" rx="12" fill="rgba(245, 158, 11, 0.2)" stroke="#fbbf24" stroke-width="2"/>
+          <text x="427" y="129" fill="#fef3c7" font-size="13" font-weight="bold" text-anchor="middle">Y: Causa Latente</text>
+          <text x="427" y="148" fill="#94a3b8" font-size="11" font-family="monospace" text-anchor="middle">(Genera X)</text>
+
+          <line x1="332" y1="134" x2="232" y2="134" stroke="#fbbf24" stroke-width="3" class="dag-pulse-path" marker-end="url(#arrowAmber)"/>
+          <text x="280" y="120" fill="#fcd34d" font-size="11" font-family="monospace" text-anchor="middle">Direzione Reale Y &rarr; X</text>
+        `;
+        caption.textContent = isIt
+          ? "La simmetria matematica di P(X, Y) = P(Y, X) implica che la tavola di contingenza trasposta produce identico \u03c7\u00b2 e identico p-value. Solo l'ordine temporale o il dominio stabiliscono la direzione causale."
+          : "The mathematical symmetry P(X, Y) = P(Y, X) implies that transposing the contingency table yields the exact same \u03c7\u00b2 and p-value. Only temporal ordering or domain knowledge establishes causal direction.";
+        stratExpl.textContent = isIt
+          ? "Esempio: presenza di estintori (X) e danno da incendio (Y) sono associati positivamente, ma sono gli incendi (Y) a motivare l'installazione degli estintori (X)."
+          : "Example: presence of fire extinguishers (X) and fire risk (Y) are positively associated, yet fire risk (Y) drives the installation of extinguishers (X).";
+        stratArea.innerHTML = "";
+      }
+    }
+
+    function applyTranslations() {
+      const dict = I18N[state.lang];
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (dict[key]) el.textContent = dict[key];
+      });
+    }
+
+    function refreshAll() {
+      computeContingencyAnalysis();
+      applyTranslations();
+      renderPresets();
+      renderKPIs();
+      renderRawPreview();
+      renderContingencyTable();
+      renderCellInspector();
+      renderVisualCharts();
+      renderInferenceAndCurve();
+      renderCausalExplorer();
+    }
+
+    /* =========================================================================
+       7. EVENT LISTENERS & INITIALIZATION
+       ========================================================================= */
+    // Language Switcher
+    document.querySelectorAll(".lang-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.lang = btn.getAttribute("data-lang");
+        refreshAll();
+      });
+    });
+
+    // Dataset Tabs
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        const tabId = btn.getAttribute("data-tab");
+        document.getElementById(`tab-${tabId}`).classList.add("active");
+      });
+    });
+
+    // Monte Carlo Simulator
+    const simNInput = document.getElementById("simN");
+    const simLambdaInput = document.getElementById("simLambda");
+    simNInput.addEventListener("input", () => {
+      document.getElementById("simNVal").textContent = simNInput.value;
+    });
+    simLambdaInput.addEventListener("input", () => {
+      const v = Number(simLambdaInput.value);
+      const tag = v === 0 ? " (Indipendenza)" : (v < 0.45 ? " (Debole/Moderata)" : " (Forte)");
+      document.getElementById("simLambdaVal").textContent = v.toFixed(2) + tag;
+    });
+
+    document.getElementById("btnRunSim").addEventListener("click", () => {
+      const N = Number(simNInput.value);
+      const lambda = Number(simLambdaInput.value);
+      const dim = document.getElementById("simDim").value;
+      const [rStr, cStr] = dim.split("x");
+      const r = Number(rStr);
+      const c = Number(cStr);
+
+      const xLevels = Array.from({ length: r }, (_, i) => `X_${i + 1}`);
+      const yLevels = Array.from({ length: c }, (_, j) => `Y_${j + 1}`);
+      const pairs = [];
+
+      for (let k = 0; k < N; k++) {
+        const i = Math.floor(Math.random() * r);
+        let j;
+        if (Math.random() < lambda) {
+          // Coupled index with small noise
+          j = Math.min(c - 1, Math.floor((i / r) * c));
+        } else {
+          j = Math.floor(Math.random() * c);
+        }
+        pairs.push({ x: xLevels[i], y: yLevels[j] });
+      }
+
+      state.activePresetId = "sim";
+      state.xName = "Var_X_Sim";
+      state.yName = "Var_Y_Sim";
+      state.xLevels = xLevels;
+      state.yLevels = yLevels;
+      state.pairs = pairs;
+      refreshAll();
+    });
+
+    // Raw Observation Editor
+    document.getElementById("btnAddRow").addEventListener("click", () => {
+      const vx = document.getElementById("inputNewX").value.trim();
+      const vy = document.getElementById("inputNewY").value.trim();
+      if (!vx || !vy) return;
+      state.pairs.push({ x: vx, y: vy });
+      if (!state.xLevels.includes(vx)) state.xLevels.push(vx);
+      if (!state.yLevels.includes(vy)) state.yLevels.push(vy);
+      document.getElementById("inputNewX").value = "";
+      document.getElementById("inputNewY").value = "";
+      state.activePresetId = "custom";
+      refreshAll();
+    });
+
+    document.getElementById("btnSyncCSV").addEventListener("click", () => {
+      const lines = [`${state.xName}, ${state.yName}`];
+      state.pairs.forEach(p => lines.push(`${p.x}, ${p.y}`));
+      document.getElementById("csvInputArea").value = lines.join("\n");
+    });
+
+    document.getElementById("btnLoadCSV").addEventListener("click", () => {
+      const raw = document.getElementById("csvInputArea").value.trim();
+      if (!raw) return;
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return;
+
+      let startLine = 0;
+      const firstParts = lines[0].split(/[,;\t]+/).map(s => s.trim());
+      if (firstParts.length >= 2) {
+        state.xName = firstParts[0] || "X";
+        state.yName = firstParts[1] || "Y";
+        startLine = 1;
+      }
+
+      const newPairs = [];
+      for (let k = startLine; k < lines.length; k++) {
+        const parts = lines[k].split(/[,;\t]+/).map(s => s.trim());
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          newPairs.push({ x: parts[0], y: parts[1] });
+        }
+      }
+      if (newPairs.length >= 2) {
+        state.pairs = newPairs;
+        state.xLevels = [];
+        state.yLevels = [];
+        state.activePresetId = "custom";
+        refreshAll();
+      }
+    });
+
+    // Contingency Table Display Modes
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.tableMode = btn.getAttribute("data-mode");
+        renderContingencyTable();
+      });
+    });
+
+    // Alpha Significance Level Buttons
+    document.querySelectorAll(".alpha-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".alpha-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.alpha = Number(btn.getAttribute("data-alpha"));
+        refreshAll();
+      });
+    });
+
+    // Causal DAG Scenario Buttons
+    document.querySelectorAll(".scenario-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".scenario-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.causalScenario = btn.getAttribute("data-scenario");
+        state.isStratified = false;
+        renderCausalExplorer();
+      });
+    });
+
+    document.getElementById("btnToggleStratify").addEventListener("click", () => {
+      state.isStratified = !state.isStratified;
+      renderCausalExplorer();
+    });
+
+    // Export CSV & JSON Reports
+    function downloadBlob(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("btnExportCSV").addEventListener("click", () => {
+      const a = state.analysis;
+      if (!a) return;
+      const rows = [[`${state.xName} \\ ${state.yName}`, ...a.yLevels, "Row_Total"]];
+      for (let i = 0; i < a.r; i++) {
+        rows.push([a.xLevels[i], ...a.O[i], a.rowTotals[i]]);
+      }
+      rows.push(["Col_Total", ...a.colTotals, a.N]);
+      rows.push([]);
+      rows.push(["Chi2", a.chi2Total.toFixed(6), "df", a.df, "p_value", a.pValue.toFixed(6), "Cramers_V", a.cramersV.toFixed(6)]);
+      const csvStr = rows.map(r => r.join(",")).join("\n");
+      downloadBlob(csvStr, "contingency_analysis.csv", "text/csv;charset=utf-8;");
+    });
+
+    document.getElementById("btnExportJSON").addEventListener("click", () => {
+      const a = state.analysis;
+      if (!a) return;
+      const payload = {
+        variables: { X: state.xName, Y: state.yName },
+        sampleSize: a.N,
+        xLevels: a.xLevels,
+        yLevels: a.yLevels,
+        observedFrequencies: a.O,
+        expectedFrequencies: a.E,
+        rowConditionals: a.rowCond,
+        colConditionals: a.colCond,
+        inference: {
+          chiSquare: a.chi2Total,
+          degreesOfFreedom: a.df,
+          pValue: a.pValue,
+          alpha: state.alpha,
+          criticalValue: a.critValue,
+          cramersV: a.cramersV,
+          statisticallyDependent: a.isDependent
+        }
+      };
+      downloadBlob(JSON.stringify(payload, null, 2), "contingency_analysis.json", "application/json");
+    });
+
+    // Initial Boot
+    const initialPreset = PRESETS[0].build();
+    state.xName = initialPreset.xName;
+    state.yName = initialPreset.yName;
+    state.xLevels = initialPreset.xLevels;
+    state.yLevels = initialPreset.yLevels;
+    state.pairs = initialPreset.pairs;
+    refreshAll();
+  </script>
+</body>
+</html>
